@@ -1,6 +1,7 @@
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 from documentVerification.routers.verification_router import router as document_router
+from authentication.router import auth_router, user_router
 
 app = FastAPI(
     title="TokenEstate Document Verification & Anti-Fraud Engine",
@@ -17,8 +18,10 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
-# Mount the document verification router
+# Mount the routers
 app.include_router(document_router, prefix="/api/v1")
+app.include_router(auth_router, prefix="/api/v1")
+app.include_router(user_router, prefix="/api/v1")
 
 @app.get("/")
 def health_check():
