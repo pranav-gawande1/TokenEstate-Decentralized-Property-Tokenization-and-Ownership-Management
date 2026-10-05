@@ -37,7 +37,7 @@ export const Sidebar: React.FC<{ className?: string; onCloseMobile?: () => void 
   ];
 
   const verificationItems = [
-    { label: 'QR Verification', href: '/verification/qr', icon: <QrCode className="w-4 h-4" /> },
+    // { label: 'QR Verification', href: '/verification/qr', icon: <QrCode className="w-4 h-4" /> },
     { label: 'Document Hash Check', href: '/verification/document', icon: <FileSearch className="w-4 h-4" /> },
     { label: 'Audit Trail', href: '/audit', icon: <History className="w-4 h-4" /> },
   ];
@@ -204,7 +204,7 @@ export const Sidebar: React.FC<{ className?: string; onCloseMobile?: () => void 
       </div>
 
       {/* Role Switcher Drawer Foot */}
-      <div className="p-4 border-t border-slate-800/90 bg-[#060B17]">
+      {/* <div className="p-4 border-t border-slate-800/90 bg-[#060B17]">
         <p className="text-[11px] font-bold text-slate-400 mb-2 uppercase tracking-wider">
           Switch Test Persona
         </p>
@@ -223,7 +223,7 @@ export const Sidebar: React.FC<{ className?: string; onCloseMobile?: () => void 
             </button>
           ))}
         </div>
-      </div>
+      </div> */}
     </aside>
   );
 };

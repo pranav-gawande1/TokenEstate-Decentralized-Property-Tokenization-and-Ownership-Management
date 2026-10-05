@@ -1,16 +1,15 @@
 import React, { useState } from 'react';
 import { Link, useLocation } from 'react-router-dom';
-import { WalletButton } from '../wallet/WalletButton';
-import { NetworkBadge } from '../wallet/NetworkBadge';
-import { WalletModal } from '../wallet/WalletModal';
 import {
   Menu,
   X,
   Shield,
 } from 'lucide-react';
 import { useWallet } from '../../context/WalletContext';
+import { NetworkBadge } from '../../components/wallet/NetworkBadge';
+import { WalletButton } from '../../components/wallet/WalletButton';
 
-export const Header: React.FC = () => {
+export const LandingNavigation: React.FC = () => {
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
 
   const location = useLocation();
@@ -28,15 +27,7 @@ export const Header: React.FC = () => {
   return (
     <header className="sticky top-0 z-40 w-full bg-[#0B132B] text-white border-b border-slate-800/90 shadow-sm">
 
-      {/* =====================================================
-          DESKTOP HEADER
-      ====================================================== */}
-
       <div className="w-full h-16 px-4 sm:px-6 lg:px-8 flex items-center gap-4">
-
-        {/* =================================================
-            LOGO
-        ================================================== */}
 
         <Link
           to="/"
@@ -55,11 +46,7 @@ export const Header: React.FC = () => {
           </span>
         </Link>
 
-        {/* =================================================
-            NAVIGATION
-        ================================================== */}
-
-        {/* <nav className="hidden lg:flex items-center gap-1 ml-6 flex-1">
+        <nav className="hidden lg:flex items-center gap-1 ml-6 flex-1">
           {navLinks.map((link) => {
             const isActive =
               location.pathname === link.href ||
@@ -89,7 +76,7 @@ export const Header: React.FC = () => {
               </Link>
             );
           })}
-        </nav> */}
+        </nav>
 
         {/* =================================================
             RIGHT SIDE
@@ -244,9 +231,6 @@ export const Header: React.FC = () => {
           </div>
         </div>
       )}
-
-      {/* Global wallet modal */}
-      <WalletModal />
 
     </header>
   );
