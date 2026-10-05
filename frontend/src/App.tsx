@@ -32,9 +32,9 @@ export function App() {
       <WalletProvider>
         <BrowserRouter>
           <Routes>
+            <Route path="/" element={<LandingPage />} />
             <Route element={<AppLayout />}>
               {/* Marketing & Public */}
-              <Route path="/" element={<LandingPage />} />
               <Route path="/about" element={<AboutPage />} />
               <Route path="/features" element={<FeaturesPage />} />
               <Route path="/connect-wallet" element={<Navigate to="/dashboard" replace />} />
