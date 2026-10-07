@@ -34,7 +34,7 @@ env/
 # --- AI / HuggingFace / PyTorch Local Caches ---
 .cache/
 hf_cache/
-models/
+model/
 *.pt
 *.pth
 *.bin
