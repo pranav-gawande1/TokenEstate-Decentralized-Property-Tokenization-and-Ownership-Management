@@ -3,7 +3,6 @@ import { Outlet, useLocation } from 'react-router-dom';
 
 import { Header } from './Header';
 import { Sidebar } from './Sidebar';
-import { Footer } from './Footer';
 import {
   Breadcrumb,
   type BreadcrumbItem,
@@ -13,7 +12,10 @@ export const AppLayout: React.FC = () => {
   const location = useLocation();
   const [mobileSidebarOpen, setMobileSidebarOpen] = useState(false);
 
-  // Marketing pages use a simple header/content/footer layout
+  // ------------------------------------------------------------
+  // Marketing routes
+  // ------------------------------------------------------------
+
   const isMarketingRoute =
     location.pathname === '/' ||
     location.pathname === '/about' ||
@@ -65,8 +67,6 @@ export const AppLayout: React.FC = () => {
         <main className="flex-1">
           <Outlet />
         </main>
-
-        <Footer />
       </div>
     );
   }
@@ -76,32 +76,72 @@ export const AppLayout: React.FC = () => {
   // ------------------------------------------------------------
 
   return (
-    <div className="min-h-screen bg-slate-50 text-slate-900">
-      {/* Header */}
-      <Header />
+    <div className="h-screen overflow-hidden bg-slate-50 text-slate-900">
 
-      {/* Application body */}
-      <div className="flex w-full min-h-[calc(100vh-64px)]">
+      {/* ======================================================
+          FIXED HEADER
+      ====================================================== */}
 
-        {/* ======================================================
+      <header className="relative z-40 h-16 shrink-0">
+        <Header />
+      </header>
+
+
+      {/* ======================================================
+          APPLICATION BODY
+          Height = viewport - header
+      ====================================================== */}
+
+      <div className="flex h-[calc(100vh-4rem)] w-full overflow-hidden">
+
+
+        {/* ====================================================
             DESKTOP SIDEBAR
-        ====================================================== */}
 
-        <aside className="hidden md:flex w-72 shrink-0 border-r border-slate-200 bg-slate-950">
-          <Sidebar className="w-full" />
+            Fixed in the application shell.
+            It does NOT scroll.
+        ===================================================== */}
+
+        <aside
+          className="
+            hidden
+            md:flex
+            w-72
+            shrink-0
+            h-full
+            overflow-hidden
+            border-r
+            border-slate-800
+            bg-slate-950
+          "
+        >
+          <Sidebar className="w-full h-full" />
         </aside>
 
-        {/* ======================================================
+
+        {/* ====================================================
             MOBILE SIDEBAR
-        ====================================================== */}
+        ===================================================== */}
 
         {mobileSidebarOpen && (
           <div
-            className="fixed inset-0 z-50 md:hidden bg-slate-950/50 backdrop-blur-sm"
+            className="
+              fixed
+              inset-0
+              z-50
+              md:hidden
+              bg-slate-950/50
+              backdrop-blur-sm
+            "
             onClick={() => setMobileSidebarOpen(false)}
           >
             <div
-              className="w-72 h-full bg-slate-950 shadow-2xl"
+              className="
+                w-72
+                h-full
+                bg-slate-950
+                shadow-2xl
+              "
               onClick={(e) => e.stopPropagation()}
             >
               <Sidebar
@@ -113,29 +153,39 @@ export const AppLayout: React.FC = () => {
           </div>
         )}
 
-        {/* ======================================================
-            MAIN APPLICATION AREA
-        ====================================================== */}
 
-        <main className="flex-1 min-w-0 flex flex-col bg-slate-50">
+        {/* ====================================================
+            MAIN CONTENT
 
-          {/* Page content */}
-          <div className="flex-1 px-4 py-5 sm:px-6 lg:px-8">
+            THIS IS THE ONLY SCROLLABLE AREA
+        ===================================================== */}
+
+        <main
+          className="
+            flex-1
+            min-w-0
+            h-full
+            overflow-y-auto
+            overflow-x-hidden
+            bg-slate-50
+          "
+        >
+
+          {/* Page container */}
+          <div className="w-full px-4 py-5 sm:px-6 lg:px-8">
 
             {/* Breadcrumb */}
             <div className="mb-6">
               <Breadcrumb items={breadcrumbItems} />
             </div>
 
-            {/* Actual page */}
+            {/* Page */}
             <Outlet />
 
           </div>
 
-          {/* Footer */}
-          <Footer />
-
         </main>
+
       </div>
     </div>
   );
