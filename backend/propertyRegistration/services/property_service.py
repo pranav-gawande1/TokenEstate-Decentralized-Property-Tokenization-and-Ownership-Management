@@ -25,11 +25,13 @@ class PropertyService:
         suffix = hashlib.sha256(f"{user_id}:{survey_number}".encode()).hexdigest()[:16]
         return f"PROP-{suffix.upper()}"
 
+    
     @staticmethod
     def _metadata(record: PropertyRegistrationRequest, property_id: str) -> dict:
         return {
             "version": 1,
             "property_id": property_id,
+            "title": record.title,
             "survey_number": record.survey_number,
             "property_type": record.property_type,
             "address": record.address,
@@ -41,6 +43,14 @@ class PropertyService:
             "land_type": record.land_type,
             "latitude": record.latitude,
             "longitude": record.longitude,
+            "ownership_type": record.ownership_type,
+            "registration_date": (
+                record.registration_date.isoformat()
+                if record.registration_date
+                else None
+            ),
+            "government_registration_ref": record.government_registration_ref,
+            "valuation_in_inr": record.valuation_in_inr,
         }
 
     async def register_property(self, user, data: PropertyRegistrationRequest) -> Property:
@@ -57,6 +67,11 @@ class PropertyService:
         metadata_hash = metadata_sha256(self._metadata(data, property_id))
         blockchain_property_id = "0x" + __import__("web3").Web3.keccak(text=property_id).hex()[2:]
         record = Property(
+            title=data.title,
+            ownership_type=data.ownership_type,
+            registration_date=data.registration_date,
+            government_registration_ref=data.government_registration_ref,
+            valuation_in_inr=data.valuation_in_inr,
             property_id=property_id,
             owner_user_id=user.user_id,
             owner_wallet=user.wallet_address,
@@ -118,13 +133,42 @@ class PropertyService:
 
     async def verify_property(self, record_id: UUID, user):
         record = await self.get_property(record_id, user)
+        
         metadata = {
-            "version": 1, "property_id": record.property_id, "survey_number": record.survey_number,
-            "property_type": record.property_type, "address": record.address, "city": record.city,
-            "district": record.district, "state": record.state, "pin_code": record.pin_code,
-            "area": Decimal(str(record.area)), "land_type": record.land_type,
-            "latitude": Decimal(str(record.latitude)) if record.latitude is not None else None,
-            "longitude": Decimal(str(record.longitude)) if record.longitude is not None else None,
+            "version": 1,
+            "property_id": record.property_id,
+            "title": record.title,
+            "survey_number": record.survey_number,
+            "property_type": record.property_type,
+            "address": record.address,
+            "city": record.city,
+            "district": record.district,
+            "state": record.state,
+            "pin_code": record.pin_code,
+            "area": Decimal(str(record.area)),
+            "land_type": record.land_type,
+            "latitude": (
+                Decimal(str(record.latitude))
+                if record.latitude is not None
+                else None
+            ),
+            "longitude": (
+                Decimal(str(record.longitude))
+                if record.longitude is not None
+                else None
+            ),
+            "ownership_type": record.ownership_type,
+            "registration_date": (
+                record.registration_date.isoformat()
+                if record.registration_date
+                else None
+            ),
+            "government_registration_ref": record.government_registration_ref,
+            "valuation_in_inr": (
+                Decimal(str(record.valuation_in_inr))
+                if record.valuation_in_inr is not None
+                else None
+            ),
         }
         database_hash = metadata_sha256(metadata)
         chain = await self.blockchain.get_property(record.property_id)

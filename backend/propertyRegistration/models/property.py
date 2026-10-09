@@ -1,8 +1,8 @@
 import enum
 import uuid
-from datetime import datetime
+from datetime import datetime, date
 
-from sqlalchemy import DateTime, Index, Integer, Numeric, String, Text, func
+from sqlalchemy import DateTime, Index, Integer, Numeric, String, Text, func, Date
 from sqlalchemy.dialects.postgresql import UUID
 from sqlalchemy.orm import Mapped, mapped_column
 
@@ -35,10 +35,23 @@ class Property(Base):
         Index("ix_properties_blockchain_status", "blockchain_status"),
     )
 
-    id: Mapped[uuid.UUID] = mapped_column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
+    id: Mapped[uuid.UUID] = mapped_column(
+        UUID(as_uuid=True), primary_key=True, default=uuid.uuid4
+    )
     property_id: Mapped[str] = mapped_column(String(64), unique=True, nullable=False)
     owner_user_id: Mapped[str] = mapped_column(String(128), nullable=False)
     owner_wallet: Mapped[str] = mapped_column(String(42), nullable=False)
+    title: Mapped[str] = mapped_column(String(200), nullable=False)
+    ownership_type: Mapped[str] = mapped_column(
+        String(50), nullable=False, default="Sole Ownership"
+    )
+    registration_date: Mapped[date | None] = mapped_column(Date, nullable=True)
+    government_registration_ref: Mapped[str | None] = mapped_column(
+        String(150), nullable=True
+    )
+    valuation_in_inr: Mapped[float | None] = mapped_column(
+        Numeric(20, 2), nullable=True
+    )
     survey_number: Mapped[str] = mapped_column(String(100), nullable=False)
     property_type: Mapped[str] = mapped_column(String(50), nullable=False)
     address: Mapped[str] = mapped_column(Text, nullable=False)
@@ -56,7 +69,18 @@ class Property(Base):
     block_number: Mapped[int | None] = mapped_column(Integer, nullable=True)
     contract_address: Mapped[str | None] = mapped_column(String(42), nullable=True)
     network_chain_id: Mapped[int | None] = mapped_column(Integer, nullable=True)
-    registration_status: Mapped[RegistrationStatus] = mapped_column(String(40), nullable=False)
-    blockchain_status: Mapped[BlockchainStatus] = mapped_column(String(40), nullable=False)
-    created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), server_default=func.now(), nullable=False)
-    updated_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), server_default=func.now(), onupdate=func.now(), nullable=False)
+    registration_status: Mapped[RegistrationStatus] = mapped_column(
+        String(40), nullable=False
+    )
+    blockchain_status: Mapped[BlockchainStatus] = mapped_column(
+        String(40), nullable=False
+    )
+    created_at: Mapped[datetime] = mapped_column(
+        DateTime(timezone=True), server_default=func.now(), nullable=False
+    )
+    updated_at: Mapped[datetime] = mapped_column(
+        DateTime(timezone=True),
+        server_default=func.now(),
+        onupdate=func.now(),
+        nullable=False,
+    )

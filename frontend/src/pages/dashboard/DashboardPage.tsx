@@ -35,6 +35,7 @@ export const DashboardPage: React.FC = () => {
     const load = async () => {
       setIsLoading(true);
       const allProps = await propertyService.getAllProperties();
+      console.log("Data: ", allProps)
       setProperties(allProps);
       setTransfers(transferService.getAllTransfers());
       setRecentAudits(auditService.getAllEvents().slice(0, 5));
@@ -42,12 +43,10 @@ export const DashboardPage: React.FC = () => {
     };
 
     load();
-    const unsubProp = propertyService.subscribe(load);
     const unsubTrans = transferService.subscribe(load);
     const unsubAudit = auditService.subscribe(load);
 
     return () => {
-      unsubProp();
       unsubTrans();
       unsubAudit();
     };

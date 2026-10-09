@@ -27,7 +27,6 @@ export const PropertiesListPage: React.FC = () => {
     };
 
     load();
-    return propertyService.subscribe(load);
   }, []);
 
   useEffect(() => {

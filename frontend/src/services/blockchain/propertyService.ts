@@ -1,238 +1,464 @@
-import type { Property, PropertyStatus, PropertyDocument } from '../../types';
-import { INITIAL_PROPERTIES, FRAUD_CHECKS } from '../mockData';
+import type { Property, PropertyDocument } from '../../types';
+import { FRAUD_CHECKS } from '../mockData';
 import { auditService } from './auditService';
-import { walletService } from './walletService';
 import { APP_CONFIG } from '../../constants';
+import { apiRequest } from '../api';
+
+const PROPERTY_ENDPOINT = '/api/v1/api/v1/properties';
 
 class PropertyService {
-  private properties: Property[] = [...INITIAL_PROPERTIES];
+  private properties: Property[] = [];
   private listeners: Array<() => void> = [];
 
-  constructor() {
-    // Load from localStorage if present for interactive persistence
-    if (typeof window !== 'undefined') {
-      const stored = localStorage.getItem('cadastra_properties');
-      if (stored) {
-        try {
-          this.properties = JSON.parse(stored);
-        } catch (e) {
-          console.error('Failed to parse cached properties', e);
-        }
-      }
-    }
+  private notify(): void {
+    this.listeners.forEach((listener) => listener());
   }
 
-  private persist() {
-    if (typeof window !== 'undefined') {
-      localStorage.setItem('cadastra_properties', JSON.stringify(this.properties));
-    }
-    this.listeners.forEach(l => l());
+  private extractList(response: any): any[] {
+    if (Array.isArray(response)) return response;
+    if (Array.isArray(response?.properties)) return response.properties;
+    if (Array.isArray(response?.items)) return response.items;
+    if (Array.isArray(response?.data)) return response.data;
+
+    return [];
+
   }
 
-  public subscribe(cb: () => void): () => void {
-    this.listeners.push(cb);
-    return () => {
-      this.listeners = this.listeners.filter(l => l !== cb);
+  private extractProperty(response: any): any {
+    return response?.property ?? response?.data ?? response;
+  }
+
+  private mapProperty(value: any): Property {
+    const coordinates = value.coordinates ?? {};
+
+    const statusMap: Record<string, Property['status']> = {
+      pending: 'pending_verification',
+      submitted: 'pending_verification',
+      pending_verification: 'pending_verification',
+      verified: 'verified',
+      approved: 'verified',
+      rejected: 'rejected',
+      tokenized: 'tokenized',
     };
+
+    const rawStatus = String(value.status ?? 'pending_verification')
+      .toLowerCase()
+      .replace(/[\s-]+/g, '_');
+
+    const status =
+      statusMap[rawStatus] ?? 'pending_verification';
+
+    const rawDocuments = value.documents ?? [];
+
+    const documents: PropertyDocument[] = Array.isArray(rawDocuments)
+      ? rawDocuments.map((doc: any) => ({
+        ...doc,
+        ipfsCid: doc.ipfsCid ?? doc.ipfs_cid ?? doc.cid ?? '',
+        verificationStatus:
+          doc.verificationStatus ??
+          doc.verification_status ??
+          'pending',
+        verifiedBy: doc.verifiedBy ?? doc.verified_by,
+        verifiedAt: doc.verifiedAt ?? doc.verified_at,
+      }) as PropertyDocument)
+      : [];
+
+    return {
+      ...value,
+      id: String(
+        value.id ?? value.property_id ?? value.propertyId ?? '',
+      ),
+      title: value.title ?? value.name ?? '',
+      surveyNumber: String(
+        value.surveyNumber ?? value.survey_number ?? '',
+      ),
+      propertyType:
+        value.propertyType ?? value.property_type ?? '',
+      address: value.address ?? '',
+      city: value.city ?? '',
+      state: value.state ?? '',
+      district: value.district ?? '',
+      pinCode: String(
+        value.pinCode ?? value.pin_code ?? value.pincode ?? '',
+      ),
+      areaSqFt: Number(
+        value.areaSqFt ??
+        value.area_sq_ft ??
+        value.area_sqft ??
+        value.area ??
+        0,
+      ),
+      landType: value.landType ?? value.land_type ?? '',
+      coordinates: {
+        lat: Number(
+          coordinates.lat ??
+          coordinates.latitude ??
+          value.latitude ??
+          0,
+        ),
+        lng: Number(
+          coordinates.lng ??
+          coordinates.longitude ??
+          value.longitude ??
+          0,
+        ),
+      },
+      currentOwnerAddress:
+        value.currentOwnerAddress ??
+        value.current_owner_address ??
+        value.owner_wallet ??
+        value.owner_address ??
+        '',
+      ownershipType:
+        value.ownershipType ?? value.ownership_type ?? '',
+      registrationDate:
+        value.registrationDate ??
+        value.registration_date ??
+        value.created_at ??
+        '',
+      status,
+      governmentRegistrationRef:
+        value.governmentRegistrationRef ??
+        value.government_registration_ref ??
+        '',
+      valuationInINR: Number(
+        value.valuationInINR ??
+        value.valuation_in_inr ??
+        value.valuation_inr ??
+        0,
+      ),
+      valuationInMATIC: Number(
+        value.valuationInMATIC ??
+        value.valuation_in_matic ??
+        0,
+      ),
+      isTokenized: Boolean(
+        value.isTokenized ??
+        value.is_tokenized ??
+        status === 'tokenized',
+      ),
+      tokenId: value.tokenId ?? value.token_id,
+      tokenContract:
+        value.tokenContract ?? value.token_contract,
+      mintTxHash:
+        value.mintTxHash ?? value.mint_tx_hash,
+      image: value.image ?? value.image_url ?? '',
+      documents,
+    } as Property;
+
   }
 
   public async getAllProperties(): Promise<Property[]> {
+    const response = await apiRequest<any>({
+      endpoint: PROPERTY_ENDPOINT,
+      method: 'GET',
+    });
+
+    this.properties = this.extractList(response).map((item) =>
+      this.mapProperty(item),
+    );
+
+    this.notify();
+
     return [...this.properties];
+
+
   }
 
-  public async getPropertyById(id: string): Promise<Property | null> {
-    const found = this.properties.find(p => p.id === id);
-    return found ? { ...found } : null;
+  public async getPropertyById(
+    id: string,
+  ): Promise<Property | null> {
+    const response = await apiRequest<any>({
+      endpoint: `${PROPERTY_ENDPOINT}/${encodeURIComponent(id)}`,
+      method: 'GET',
+    });
+
+    const property = this.mapProperty(
+      this.extractProperty(response),
+    );
+
+    const index = this.properties.findIndex(
+      (item) => item.id === property.id,
+    );
+
+    if (index >= 0) {
+      this.properties[index] = property;
+    } else {
+      this.properties.unshift(property);
+    }
+
+    this.notify();
+
+    return property;
+
+
   }
 
-  public async getPropertiesByOwner(ownerAddress: string): Promise<Property[]> {
-    return this.properties.filter(
-      p => p.currentOwnerAddress.toLowerCase() === ownerAddress.toLowerCase()
+  public async getPropertiesByOwner(
+    ownerAddress: string,
+  ): Promise<Property[]> {
+    const properties = await this.getAllProperties();
+
+    return properties.filter(
+      (property) =>
+        property.currentOwnerAddress.toLowerCase() ===
+        ownerAddress.toLowerCase(),
     );
   }
 
   public async getPendingProperties(): Promise<Property[]> {
-    return this.properties.filter(p => p.status === 'pending_verification');
+    const properties = await this.getAllProperties();
+
+    return properties.filter(
+      (property) =>
+        property.status === 'pending_verification',
+    );
+
   }
 
   public async getMarketplaceProperties(): Promise<Property[]> {
-    // Properties that are verified or tokenized
-    return this.properties.filter(p => p.status === 'tokenized' || p.status === 'verified');
+    const properties = await this.getAllProperties();
+
+    return properties.filter(
+      (property) =>
+        property.status === 'verified' ||
+        property.status === 'tokenized',
+    );
+
   }
 
-  public async registerProperty(data: Omit<Property, 'id' | 'status' | 'registrationDate' | 'isTokenized' | 'governmentRegistrationRef'>): Promise<{ property: Property; txHash: string; blockNumber: number }> {
-    const currentCount = this.properties.length + 1;
-    const newId = `PROP-00${currentCount}`;
-    const txHash = await walletService.signTransaction('registerProperty', { id: newId, survey: data.surveyNumber });
-    const blockNumber = 15490000 + Math.floor(Math.random() * 5000);
-    const regRef = `IGR-MH-2026-${Math.floor(100000 + Math.random() * 900000)}`;
-
-    const newProperty: Property = {
-      ...data,
-      id: newId,
-      status: 'pending_verification',
-      registrationDate: new Date().toISOString().split('T')[0],
-      isTokenized: false,
-      governmentRegistrationRef: regRef,
+  public async registerProperty(
+    data: Omit<
+      Property,
+      | 'id'
+      | 'status'
+      | 'registrationDate'
+      | 'isTokenized'
+      | 'governmentRegistrationRef'
+    >,
+  ): Promise<{
+    property: Property;
+    txHash: string;
+    blockNumber: number;
+  }> {
+    const payload = {
+      title: data.title,
+      survey_number: data.surveyNumber,
+      property_type: data.propertyType,
+      address: data.address,
+      city: data.city,
+      state: data.state,
+      district: data.district,
+      pin_code: data.pinCode,
+      area_sq_ft: data.areaSqFt,
+      land_type: data.landType,
+      latitude: data.coordinates?.lat,
+      longitude: data.coordinates?.lng,
+      current_owner_address: data.currentOwnerAddress,
+      ownership_type: data.ownershipType,
+      valuation_in_inr: data.valuationInINR,
+      valuation_in_matic: data.valuationInMATIC,
     };
 
-    this.properties.unshift(newProperty);
-    this.persist();
-
-    // Log to Blockchain Audit Trail
-    auditService.recordEvent({
-      propertyId: newId,
-      eventType: 'PropertyRegistered',
-      actorAddress: data.currentOwnerAddress,
-      role: 'Owner',
-      blockNumber,
-      txHash,
-      details: `Cadastral registration submitted for Survey ${data.surveyNumber} in ${data.city}.`
+    const response = await apiRequest<any>({
+      endpoint: PROPERTY_ENDPOINT,
+      method: 'POST',
+      body: payload,
     });
 
-    return { property: newProperty, txHash, blockNumber };
+    const result = this.extractProperty(response);
+    const property = this.mapProperty(result);
+
+    const txHash = String(
+      response?.tx_hash ??
+      response?.txHash ??
+      result?.tx_hash ??
+      result?.txHash ??
+      '',
+    );
+
+    const blockNumber = Number(
+      response?.block_number ??
+      response?.blockNumber ??
+      result?.block_number ??
+      result?.blockNumber ??
+      0,
+    );
+
+    this.properties = [
+      property,
+      ...this.properties.filter(
+        (item) => item.id !== property.id,
+      ),
+    ];
+
+    this.notify();
+
+    if (txHash) {
+      auditService.recordEvent({
+        propertyId: property.id,
+        eventType: 'PropertyRegistered',
+        actorAddress: property.currentOwnerAddress,
+        role: 'Owner',
+        blockNumber,
+        txHash,
+        details: `Property registration submitted for Survey ${property.surveyNumber} in ${property.city}.`,
+      });
+    }
+
+    return { property, txHash, blockNumber };
+
+
   }
 
-  public async approveProperty(id: string, officerAddress: string, notes?: string): Promise<{ success: boolean; txHash: string }> {
-    const property = this.properties.find(p => p.id === id);
-    if (!property) throw new Error('Property not found');
-
-    const txHash = await walletService.signTransaction('approveProperty', { id, officerAddress });
-    const blockNumber = 15491000 + Math.floor(Math.random() * 5000);
-
-    property.status = 'verified';
-    // Mark documents as verified too
-    property.documents = property.documents.map(doc => ({
-      ...doc,
-      verificationStatus: 'verified',
-      verifiedBy: officerAddress,
-      verifiedAt: new Date().toISOString(),
-    }));
-
-    this.persist();
-
-    auditService.recordEvent({
-      propertyId: id,
-      eventType: 'PropertyApproved',
-      actorAddress: officerAddress,
-      role: 'Government Registrar',
-      blockNumber,
-      txHash,
-      details: notes || `Cadastral survey & legal deeds verified and approved on Polygon blockchain.`
+  public async approveProperty(
+    id: string,
+    officerAddress: string,
+    notes?: string,
+  ): Promise<{ success: boolean; txHash: string }> {
+    const response = await apiRequest<any>({
+      endpoint: `${PROPERTY_ENDPOINT}/${encodeURIComponent(id)}/approve`,
+      method: 'POST',
+      body: {
+        officer_address: officerAddress,
+        notes,
+      },
     });
 
-    return { success: true, txHash };
+    await this.getAllProperties();
+
+    return {
+      success: response?.success ?? true,
+      txHash: response?.tx_hash ?? response?.txHash ?? '',
+    };
   }
 
-  public async rejectProperty(id: string, officerAddress: string, reason: string): Promise<{ success: boolean; txHash: string }> {
-    const property = this.properties.find(p => p.id === id);
-    if (!property) throw new Error('Property not found');
-
-    const txHash = await walletService.signTransaction('rejectProperty', { id, reason });
-    const blockNumber = 15491200 + Math.floor(Math.random() * 5000);
-
-    property.status = 'rejected';
-    this.persist();
-
-    auditService.recordEvent({
-      propertyId: id,
-      eventType: 'PropertyRejected',
-      actorAddress: officerAddress,
-      role: 'Government Registrar',
-      blockNumber,
-      txHash,
-      details: `Registration rejected by Registrar. Reason: ${reason}`
+  public async rejectProperty(
+    id: string,
+    officerAddress: string,
+    reason: string,
+  ): Promise<{ success: boolean; txHash: string }> {
+    const response = await apiRequest<any>({
+      endpoint: `${PROPERTY_ENDPOINT}/${encodeURIComponent(id)}/reject`,
+      method: 'POST',
+      body: {
+        officer_address: officerAddress,
+        reason,
+      },
     });
 
-    return { success: true, txHash };
+    await this.getAllProperties();
+
+    return {
+      success: response?.success ?? true,
+      txHash: response?.tx_hash ?? response?.txHash ?? '',
+    };
+
   }
 
-  public async attachDocument(propertyId: string, doc: PropertyDocument): Promise<void> {
-    const property = this.properties.find(p => p.id === propertyId);
-    if (!property) throw new Error('Property not found');
-
-    property.documents.push(doc);
-    this.persist();
-
-    const txHash = await walletService.signTransaction('attachDocument', { propertyId, cid: doc.ipfsCid });
-    auditService.recordEvent({
-      propertyId,
-      eventType: 'DocumentAdded',
-      actorAddress: property.currentOwnerAddress,
-      role: 'Owner',
-      blockNumber: 15491500,
-      txHash,
-      details: `Attached ${doc.type} (${doc.name}) with IPFS CID ${doc.ipfsCid.slice(0, 16)}...`
+  public async attachDocument(
+    propertyId: string,
+    doc: PropertyDocument,
+  ): Promise<void> {
+    await apiRequest<any>({
+      endpoint: `${PROPERTY_ENDPOINT}/${encodeURIComponent(propertyId)}/documents`,
+      method: 'POST',
+      body: {
+        ...doc,
+        ipfs_cid: doc.ipfsCid,
+      },
     });
+
+    await this.getAllProperties();
+
   }
 
-  public async tokenizeProperty(propertyId: string, ownerAddress: string): Promise<{ tokenId: string; txHash: string; contractAddress: string }> {
-    const property = this.properties.find(p => p.id === propertyId);
-    if (!property) throw new Error('Property not found');
-    if (property.status !== 'verified') throw new Error('Only government verified properties can be tokenized');
-
-    const tokenId = `${Math.floor(1000 + Math.random() * 9000)}`;
-    const txHash = await walletService.signTransaction('mintPropertyNFT', { propertyId, tokenId, ownerAddress });
-    const contractAddress = APP_CONFIG.contracts.propertyNFT;
-
-    property.isTokenized = true;
-    property.status = 'tokenized';
-    property.tokenId = tokenId;
-    property.tokenContract = contractAddress;
-    property.mintTxHash = txHash;
-
-    this.persist();
-
-    auditService.recordEvent({
-      propertyId,
-      eventType: 'NFTMinted',
-      actorAddress: ownerAddress,
-      role: 'Owner',
-      blockNumber: 15492000,
-      txHash,
-      details: `Minted ERC-721 Property NFT #${tokenId} on Polygon Amoy network.`
+  public async tokenizeProperty(
+    propertyId: string,
+    ownerAddress: string,
+  ): Promise<{
+    tokenId: string;
+    txHash: string;
+    contractAddress: string;
+  }> {
+    const response = await apiRequest<any>({
+      endpoint: `${PROPERTY_ENDPOINT}/${encodeURIComponent(propertyId)}/tokenize`,
+      method: 'POST',
+      body: {
+        owner_address: ownerAddress,
+      },
     });
+
+    await this.getAllProperties();
+
+    const tokenId = String(
+      response?.token_id ?? response?.tokenId ?? '',
+    );
+
+    const txHash = String(
+      response?.tx_hash ?? response?.txHash ?? '',
+    );
+
+    const contractAddress = String(
+      response?.contract_address ??
+      response?.contractAddress ??
+      APP_CONFIG.contracts.propertyNFT,
+    );
+
+    if (!tokenId || !txHash) {
+      throw new Error(
+        'The backend did not return a token ID and transaction hash.',
+      );
+    }
 
     return { tokenId, txHash, contractAddress };
+
+
   }
 
-  public async transferOwnership(propertyId: string, newOwnerAddress: string, transferTxHash: string): Promise<void> {
-    const property = this.properties.find(p => p.id === propertyId);
-    if (!property) throw new Error('Property not found');
-
-    const previousOwner = property.currentOwnerAddress;
-    property.currentOwnerAddress = newOwnerAddress;
-    property.status = 'tokenized';
-    this.persist();
-
-    auditService.recordEvent({
-      propertyId,
-      eventType: 'TransferCompleted',
-      actorAddress: newOwnerAddress,
-      role: 'Smart Contract Escrow',
-      blockNumber: 15493000,
-      txHash: transferTxHash,
-      details: `Transferred legal blockchain token #${property.tokenId || 'N/A'} from ${previousOwner.slice(0, 8)}... to ${newOwnerAddress.slice(0, 8)}...`
+  public async transferOwnership(
+    propertyId: string,
+    newOwnerAddress: string,
+    transferTxHash: string,
+  ): Promise<void> {
+    await apiRequest<any>({
+      endpoint: `${PROPERTY_ENDPOINT}/${encodeURIComponent(propertyId)}/transfer`,
+      method: 'POST',
+      body: {
+        new_owner_address: newOwnerAddress,
+        transaction_hash: transferTxHash,
+      },
     });
+
+    await this.getAllProperties();
+
+
   }
 
-  public getFraudReport(propertyId: string) {
+  public async getFraudReport(propertyId: string) {
     if (FRAUD_CHECKS[propertyId]) {
       return FRAUD_CHECKS[propertyId];
     }
-    const prop = this.properties.find(p => p.id === propertyId);
+
+    const property = await this.getPropertyById(propertyId);
+
     return {
       propertyId,
-      surveyNumber: prop ? prop.surveyNumber : 'N/A',
+      surveyNumber: property?.surveyNumber ?? 'N/A',
       isUniquePropertyId: true,
       isUniqueSurveyNumber: true,
-      ownerWalletValid: true,
-      documentsVerified: prop ? prop.status === 'verified' || prop.status === 'tokenized' : false,
+      ownerWalletValid: Boolean(
+        property?.currentOwnerAddress,
+      ),
+      documentsVerified:
+        property?.status === 'verified' ||
+        property?.status === 'tokenized',
       previousOwnershipClean: true,
       nftUnique: true,
       conflictDetected: false,
       lastAudited: new Date().toISOString(),
     };
+
   }
 }
 

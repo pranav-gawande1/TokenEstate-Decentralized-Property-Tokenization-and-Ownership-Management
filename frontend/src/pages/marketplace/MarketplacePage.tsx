@@ -6,19 +6,13 @@ import { useWallet } from '../../context/WalletContext';
 import type { Property } from '../../types';
 import { StatusBadge } from '../../components/ui/StatusBadge';
 import { Button } from '../../components/ui/Button';
-import { Input } from '../../components/ui/Input';
-import { Select } from '../../components/ui/Select';
 import { AddressDisplay } from '../../components/ui/AddressDisplay';
 import { HashDisplay } from '../../components/ui/HashDisplay';
 import { Modal } from '../../components/ui/Modal';
 import {
   Search,
-  Filter,
   MapPin,
-  Building,
-  ArrowRight,
   ShieldCheck,
-  Layers,
   Lock,
   CheckCircle2,
 } from 'lucide-react';
@@ -40,14 +34,16 @@ export const MarketplacePage: React.FC = () => {
 
   useEffect(() => {
     const load = async () => {
-      setIsLoading(true);
-      const data = await propertyService.getMarketplaceProperties();
-      setProperties(data);
-      setIsLoading(false);
+      try {
+        const data = await propertyService.getAllProperties();
+        setProperties(data);
+      } catch (error) {
+        console.error('[PropertiesListPage] Failed to load:', error);
+      } finally {
+        setIsLoading(false);
+      }
     };
-
     load();
-    return propertyService.subscribe(load);
   }, []);
 
   const filtered = properties.filter(p => {
@@ -235,8 +231,8 @@ export const MarketplacePage: React.FC = () => {
             purchaseStep === 1
               ? 'Review Cadastral Purchase & Escrow'
               : purchaseStep === 2
-              ? 'Deposit Consideration into Smart Escrow'
-              : 'Escrow Initiated Successfully'
+                ? 'Deposit Consideration into Smart Escrow'
+                : 'Escrow Initiated Successfully'
           }
           subtitle={`Property: ${selectedToBuy.title} (Survey ${selectedToBuy.surveyNumber})`}
           maxWidth="md"

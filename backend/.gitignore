@@ -65,3 +65,10 @@ out/
 .DS_Store
 Thumbs.db
 *.log
+
+/__pycache__/main.cpython-311.pyc
+/__pycache__/verification_router.cpython-311.pyc
+/__pycache__/document_schema.cpython-311.pyc
+/__pycache__/crypto_hash.cpython-311.pyc
+/__pycache__/fraud_detector.cpython-311.pyc
+/__pycache__/ipfs_service.cpython-311.pyc
