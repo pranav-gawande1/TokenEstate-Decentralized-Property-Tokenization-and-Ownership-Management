@@ -55,6 +55,7 @@ def register_user(payload: UserCreate):
 def login_user(payload: UserLogin):
     """Authenticate user with username/email and password, returning JWT access token."""
     user = db.get_by_username_or_email(payload.username_or_email)
+
     if not user or not verify_password(payload.password, user.hashed_password):
         raise HTTPException(
             status_code=status.HTTP_401_UNAUTHORIZED,
@@ -109,4 +110,4 @@ def set_role(
         )
     
     updated_user = db.update_role(user_id, body.role.value)
-    return updated_user.to_response()
+

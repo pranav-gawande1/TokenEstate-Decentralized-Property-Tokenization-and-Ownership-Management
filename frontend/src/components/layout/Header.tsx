@@ -101,6 +101,28 @@ export const Header: React.FC = () => {
             <NetworkBadge />
           </div>
 
+          {!localStorage.getItem('token') ? (
+            <div className="hidden sm:flex items-center gap-1">
+              <Link to="/login" className="text-sm font-medium text-slate-300 hover:text-white hover:bg-slate-800/60 px-3 py-2 rounded-lg transition-colors">
+                Log in
+              </Link>
+              <Link to="/signup" className="text-sm font-medium text-white bg-blue-600 hover:bg-blue-700 px-3 py-2 rounded-lg transition-colors">
+                Sign up
+              </Link>
+            </div>
+          ) : (
+            <button
+              onClick={() => {
+                localStorage.removeItem('token');
+                localStorage.removeItem('user');
+                window.location.href = '/';
+              }}
+              className="hidden sm:flex text-sm font-medium text-slate-300 hover:text-white hover:bg-slate-800/60 px-3 py-2 rounded-lg transition-colors"
+            >
+              Log out
+            </button>
+          )}
+
           <WalletButton />
 
           <button
@@ -174,6 +196,36 @@ export const Header: React.FC = () => {
           {/* Mobile actions */}
 
           <div className="mt-4 pt-4 border-t border-slate-800 space-y-2">
+
+            {!localStorage.getItem('token') ? (
+              <>
+                <Link
+                  to="/login"
+                  onClick={() => setMobileMenuOpen(false)}
+                  className="block w-full px-3 py-2.5 rounded-lg text-sm font-semibold text-center text-slate-300 bg-slate-800 hover:text-white hover:bg-slate-700"
+                >
+                  Log in
+                </Link>
+                <Link
+                  to="/signup"
+                  onClick={() => setMobileMenuOpen(false)}
+                  className="block w-full px-3 py-2.5 rounded-lg text-sm font-semibold text-center text-white bg-blue-600 hover:bg-blue-700"
+                >
+                  Sign up
+                </Link>
+              </>
+            ) : (
+              <button
+                onClick={() => {
+                  localStorage.removeItem('token');
+                  localStorage.removeItem('user');
+                  window.location.href = '/';
+                }}
+                className="block w-full px-3 py-2.5 rounded-lg text-sm font-semibold text-center text-slate-300 bg-slate-800 hover:text-white hover:bg-slate-700"
+              >
+                Log out
+              </button>
+            )}
 
             <Link
               to="/properties/register"

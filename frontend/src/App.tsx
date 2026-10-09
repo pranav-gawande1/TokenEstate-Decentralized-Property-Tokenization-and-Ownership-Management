@@ -25,6 +25,8 @@ import { TransactionDetailsPage } from './pages/transactions/TransactionDetailsP
 import { GovernmentRegistrationsPage } from './pages/government/RegistrationsPage';
 import { FraudDetectionPage } from './pages/admin/FraudDetectionPage';
 import { SettingsPage } from './pages/settings/SettingsPage';
+import { LoginPage } from './pages/auth/LoginPage';
+import { SignupPage } from './pages/auth/SignupPage';
 
 export function App() {
   return (
@@ -38,6 +40,8 @@ export function App() {
               <Route path="/about" element={<AboutPage />} />
               <Route path="/features" element={<FeaturesPage />} />
               <Route path="/connect-wallet" element={<Navigate to="/dashboard" replace />} />
+              <Route path="/login" element={<LoginPage />} />
+              <Route path="/signup" element={<SignupPage />} />
 
               {/* Workspace Dashboard */}
               <Route path="/dashboard" element={<DashboardPage />} />

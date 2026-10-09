@@ -1,5 +1,7 @@
+
 from enum import Enum
 from typing import List, Dict, Any
+
 
 class Role(str, Enum):
     ADMIN = "admin"
@@ -9,6 +11,7 @@ class Role(str, Enum):
     VERIFIER = "verifier"
     OFFICER = "officer"
     AUDITOR = "auditor"
+
 
 ROLE_METADATA: Dict[str, Dict[str, str]] = {
     Role.ADMIN.value: {
@@ -41,6 +44,7 @@ ROLE_METADATA: Dict[str, Dict[str, str]] = {
     },
 }
 
+
 def get_available_roles() -> List[Dict[str, Any]]:
     """Returns formatted list of roles for front-end dropdown selection."""
     return [
@@ -51,3 +55,4 @@ def get_available_roles() -> List[Dict[str, Any]]:
         }
         for r in Role
     ]
+
