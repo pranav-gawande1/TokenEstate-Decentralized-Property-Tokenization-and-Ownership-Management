@@ -6,6 +6,7 @@ import { HashDisplay } from '../ui/HashDisplay';
 import { ExplorerLink } from '../ui/ExplorerLink';
 import { ShieldCheck, Layers, FileText, CheckCircle2, AlertCircle } from 'lucide-react';
 import { APP_CONFIG } from '../../constants';
+import samplePropertyImage from '../../assets/images/property_bengaluru_estate_1790929235008.jpg';
 
 export const NFTPropertyCard: React.FC<{ property: Property }> = ({ property }) => {
   return (
@@ -25,10 +26,13 @@ export const NFTPropertyCard: React.FC<{ property: Property }> = ({ property }) 
           <div className="relative z-10 my-6">
             <div className="aspect-4/3 rounded-lg overflow-hidden border border-slate-800 shadow-md bg-slate-950">
               <img
-                src={property.image}
+                src={property.image || samplePropertyImage}
                 alt={property.title}
                 referrerPolicy="no-referrer"
                 className="w-full h-full object-cover"
+                onError={(e) => {
+                  (e.currentTarget as HTMLImageElement).src = samplePropertyImage;
+                }}
               />
             </div>
           </div>

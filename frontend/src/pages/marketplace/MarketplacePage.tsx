@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
-import { propertyService } from '../../services/blockchain/propertyService';
+import { usePropertyService } from '../../services/blockchain/propertyService';
 import { transferService } from '../../services/blockchain/transferService';
 import { useWallet } from '../../context/WalletContext';
 import type { Property } from '../../types';
@@ -9,22 +9,32 @@ import { Button } from '../../components/ui/Button';
 import { AddressDisplay } from '../../components/ui/AddressDisplay';
 import { HashDisplay } from '../../components/ui/HashDisplay';
 import { Modal } from '../../components/ui/Modal';
+import { CardSkeleton } from '../../components/ui/Skeleton';
+import { EmptyState } from '../../components/ui/EmptyState';
 import {
   Search,
   MapPin,
   ShieldCheck,
   Lock,
   CheckCircle2,
+  RefreshCw,
+  AlertCircle,
 } from 'lucide-react';
 import { APP_CONFIG } from '../../constants';
+import samplePropertyImage from '../../assets/images/property_bengaluru_estate_1790929235008.jpg';
 
 export const MarketplacePage: React.FC = () => {
   const { wallet } = useWallet();
+  const {
+    getAllProperties,
+    loading: isPropertiesLoading,
+    error: propertiesError,
+  } = usePropertyService();
+
   const [properties, setProperties] = useState<Property[]>([]);
   const [searchTerm, setSearchTerm] = useState('');
   const [typeFilter, setTypeFilter] = useState('ALL');
   const [cityFilter, setCityFilter] = useState('ALL');
-  const [isLoading, setIsLoading] = useState(true);
 
   // Purchase Modal State
   const [selectedToBuy, setSelectedToBuy] = useState<Property | null>(null);
@@ -32,21 +42,20 @@ export const MarketplacePage: React.FC = () => {
   const [isProcessingPurchase, setIsProcessingPurchase] = useState(false);
   const [purchasedTxHash, setPurchasedTxHash] = useState<string | null>(null);
 
+  const load = async () => {
+    try {
+      const data = await getAllProperties();
+      setProperties(data);
+    } catch (error) {
+      console.error('[MarketplacePage] Failed to load:', error);
+    }
+  };
+
   useEffect(() => {
-    const load = async () => {
-      try {
-        const data = await propertyService.getAllProperties();
-        setProperties(data);
-      } catch (error) {
-        console.error('[PropertiesListPage] Failed to load:', error);
-      } finally {
-        setIsLoading(false);
-      }
-    };
     load();
   }, []);
 
-  const filtered = properties.filter(p => {
+  const filtered = properties.filter((p) => {
     if (typeFilter !== 'ALL' && p.propertyType !== typeFilter) return false;
     if (cityFilter !== 'ALL' && p.city !== cityFilter) return false;
     if (searchTerm.trim()) {
@@ -66,7 +75,7 @@ export const MarketplacePage: React.FC = () => {
     setIsProcessingPurchase(true);
 
     try {
-      const { transfer, txHash } = await transferService.initiatePurchaseRequest({
+      const { txHash } = await transferService.initiatePurchaseRequest({
         propertyId: selectedToBuy.id,
         propertyTitle: selectedToBuy.title,
         sellerAddress: selectedToBuy.currentOwnerAddress,
@@ -104,7 +113,7 @@ export const MarketplacePage: React.FC = () => {
             <input
               type="text"
               value={searchTerm}
-              onChange={e => setSearchTerm(e.target.value)}
+              onChange={(e) => setSearchTerm(e.target.value)}
               placeholder="Search location, title..."
               className="text-xs pl-9 pr-3 py-1.5 rounded-lg border border-slate-300 bg-white placeholder:text-slate-400 focus:outline-none focus:ring-1 focus:ring-slate-900"
             />
@@ -112,7 +121,7 @@ export const MarketplacePage: React.FC = () => {
 
           <select
             value={typeFilter}
-            onChange={e => setTypeFilter(e.target.value)}
+            onChange={(e) => setTypeFilter(e.target.value)}
             className="text-xs px-2.5 py-1.5 rounded-lg border border-slate-300 bg-white text-slate-700"
           >
             <option value="ALL">All Property Types</option>
@@ -123,7 +132,7 @@ export const MarketplacePage: React.FC = () => {
 
           <select
             value={cityFilter}
-            onChange={e => setCityFilter(e.target.value)}
+            onChange={(e) => setCityFilter(e.target.value)}
             className="text-xs px-2.5 py-1.5 rounded-lg border border-slate-300 bg-white text-slate-700"
           >
             <option value="ALL">All Jurisdictions</option>
@@ -132,100 +141,169 @@ export const MarketplacePage: React.FC = () => {
             <option value="Bengaluru">Bengaluru</option>
             <option value="Solapur">Solapur</option>
           </select>
+
+          <Button
+            variant="outline"
+            size="sm"
+            onClick={load}
+            isLoading={isPropertiesLoading}
+            disabled={isPropertiesLoading}
+            leftIcon={
+              <RefreshCw
+                className={`w-3.5 h-3.5 ${isPropertiesLoading ? 'animate-spin' : ''}`}
+              />
+            }
+          >
+            {isPropertiesLoading ? 'Fetching...' : 'Refresh'}
+          </Button>
         </div>
       </div>
 
-      {/* Property Cards Grid */}
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-        {filtered.map(property => (
-          <div
-            key={property.id}
-            className="rounded-xl border border-slate-200 bg-white overflow-hidden shadow-xs hover:border-slate-300 hover:shadow-md transition-all flex flex-col justify-between"
-          >
-            {/* Image */}
-            <div className="relative aspect-16/10 bg-slate-100 overflow-hidden">
-              <img
-                src={property.image}
-                alt={property.title}
-                referrerPolicy="no-referrer"
-                className="w-full h-full object-cover"
-              />
-              <div className="absolute top-3 left-3">
-                <StatusBadge status={property.status} />
-              </div>
-              {property.isTokenized && (
-                <div className="absolute top-3 right-3 bg-slate-900/90 text-white backdrop-blur-xs text-[11px] font-mono px-2 py-0.5 rounded font-medium">
-                  NFT #{property.tokenId}
-                </div>
-              )}
-            </div>
-
-            {/* Content */}
-            <div className="p-4 flex-1 flex flex-col justify-between">
-              <div>
-                <div className="flex items-center justify-between text-xs text-slate-500 mb-1">
-                  <span>{property.propertyType}</span>
-                  <span className="font-mono">{property.id}</span>
-                </div>
-
-                <h3 className="text-sm font-bold text-slate-900 line-clamp-1">
-                  {property.title}
-                </h3>
-
-                <div className="flex items-center gap-1 text-xs text-slate-500 mt-1">
-                  <MapPin className="w-3.5 h-3.5 text-slate-400 shrink-0" />
-                  <span className="truncate">{property.city}, {property.state}</span>
-                </div>
-
-                <div className="grid grid-cols-2 gap-2 mt-4 p-2.5 bg-slate-50 rounded-lg text-xs">
-                  <div>
-                    <span className="text-[11px] text-slate-400 block">Area</span>
-                    <span className="font-semibold text-slate-800 tabular-nums">
-                      {property.areaSqFt.toLocaleString()} sq.ft
-                    </span>
-                  </div>
-                  <div>
-                    <span className="text-[11px] text-slate-400 block">Valuation</span>
-                    <span className="font-bold text-slate-900 font-mono tabular-nums">
-                      {property.valuationInMATIC.toLocaleString()} MATIC
-                    </span>
-                  </div>
-                </div>
-              </div>
-
-              {/* Action Buttons */}
-              <div className="mt-4 pt-3 border-t border-slate-100 flex items-center justify-between gap-2">
-                <Link
-                  to={`/properties/${property.id}`}
-                  className="text-xs font-semibold text-slate-700 hover:text-slate-900"
-                >
-                  View Dossier
-                </Link>
-
-                <Button
-                  variant="primary"
-                  size="sm"
-                  onClick={() => {
-                    setSelectedToBuy(property);
-                    setPurchaseStep(1);
-                  }}
-                  leftIcon={<Lock className="w-3.5 h-3.5" />}
-                >
-                  Request Transfer
-                </Button>
-              </div>
-            </div>
+      {/* Error Banner */}
+      {propertiesError && (
+        <div className="p-4 rounded-xl border border-red-200 bg-red-50 text-red-800 text-xs flex items-center justify-between gap-3 shadow-xs">
+          <div className="flex items-center gap-2">
+            <AlertCircle className="w-4 h-4 text-red-600 shrink-0" />
+            <span>Failed to load properties: {propertiesError}</span>
           </div>
-        ))}
-      </div>
+          <Button
+            variant="outline"
+            size="sm"
+            onClick={load}
+            disabled={isPropertiesLoading}
+            className="bg-white text-red-700 border-red-300 hover:bg-red-50"
+          >
+            Retry
+          </Button>
+        </div>
+      )}
+
+      {/* Property Cards Grid or Skeletons or EmptyState */}
+      {isPropertiesLoading && properties.length === 0 ? (
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+          {Array.from({ length: 6 }).map((_, idx) => (
+            <CardSkeleton key={idx} />
+          ))}
+        </div>
+      ) : filtered.length === 0 ? (
+        <EmptyState
+          icon={<Search className="w-6 h-6 text-slate-400" />}
+          title="No properties found"
+          description={
+            searchTerm || typeFilter !== 'ALL' || cityFilter !== 'ALL'
+              ? 'No listings match your search query and filters. Try adjusting or clearing filters.'
+              : 'There are currently no verified or tokenized properties available in the marketplace.'
+          }
+          actionLabel={
+            searchTerm || typeFilter !== 'ALL' || cityFilter !== 'ALL'
+              ? 'Clear Filters'
+              : undefined
+          }
+          onAction={() => {
+            setSearchTerm('');
+            setTypeFilter('ALL');
+            setCityFilter('ALL');
+          }}
+        />
+      ) : (
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+          {filtered.map((property) => (
+            <div
+              key={property.id}
+              className="rounded-xl border border-slate-200 bg-white overflow-hidden shadow-xs hover:border-slate-300 hover:shadow-md transition-all flex flex-col justify-between"
+            >
+              {/* Image */}
+              <div className="relative aspect-16/10 bg-slate-100 overflow-hidden">
+                <img
+                  src={property.image || samplePropertyImage}
+                  alt={property.title}
+                  referrerPolicy="no-referrer"
+                  className="w-full h-full object-cover"
+                  onError={(e) => {
+                    (e.currentTarget as HTMLImageElement).src = samplePropertyImage;
+                  }}
+                />
+                <div className="absolute top-3 left-3">
+                  <StatusBadge status={property.status} />
+                </div>
+                {property.isTokenized && (
+                  <div className="absolute top-3 right-3 bg-slate-900/90 text-white backdrop-blur-xs text-[11px] font-mono px-2 py-0.5 rounded font-medium">
+                    NFT #{property.tokenId}
+                  </div>
+                )}
+              </div>
+
+              {/* Content */}
+              <div className="p-4 flex-1 flex flex-col justify-between">
+                <div>
+                  <div className="flex items-center justify-between text-xs text-slate-500 mb-1">
+                    <span>{property.propertyType}</span>
+                    <span className="font-mono">{property.id}</span>
+                  </div>
+
+                  <h3 className="text-sm font-bold text-slate-900 line-clamp-1">
+                    {property.title}
+                  </h3>
+
+                  <div className="flex items-center gap-1 text-xs text-slate-500 mt-1">
+                    <MapPin className="w-3.5 h-3.5 text-slate-400 shrink-0" />
+                    <span className="truncate">
+                      {property.city}, {property.state}
+                    </span>
+                  </div>
+
+                  <div className="grid grid-cols-2 gap-2 mt-4 p-2.5 bg-slate-50 rounded-lg text-xs">
+                    <div>
+                      <span className="text-[11px] text-slate-400 block">Area</span>
+                      <span className="font-semibold text-slate-800 tabular-nums">
+                        {property.areaSqFt.toLocaleString()} sq.ft
+                      </span>
+                    </div>
+                    <div>
+                      <span className="text-[11px] text-slate-400 block">Valuation</span>
+                      <span className="font-bold text-slate-900 font-mono tabular-nums">
+                        {property.valuationInMATIC.toLocaleString()} MATIC
+                      </span>
+                    </div>
+                  </div>
+                </div>
+
+                {/* Action Buttons */}
+                <div className="mt-4 pt-3 border-t border-slate-100 flex items-center justify-between gap-2">
+                  <Link
+                    to={`/properties/${property.id}`}
+                    className="text-xs font-semibold text-slate-700 hover:text-slate-900"
+                  >
+                    View Dossier
+                  </Link>
+
+                  <Button
+                    variant="primary"
+                    size="sm"
+                    onClick={() => {
+                      setSelectedToBuy(property);
+                      setPurchaseStep(1);
+                    }}
+                    leftIcon={<Lock className="w-3.5 h-3.5" />}
+                  >
+                    Request Transfer
+                  </Button>
+                </div>
+              </div>
+            </div>
+          ))}
+        </div>
+      )}
 
       {/* Purchase / Escrow Transfer Modal */}
       {selectedToBuy && (
         <Modal
           isOpen={!!selectedToBuy}
           onClose={() => {
-            setSelectedToBuy(null);
-            setPurchasedTxHash(null);
+            if (!isProcessingPurchase) {
+              setSelectedToBuy(null);
+              setPurchasedTxHash(null);
+            }
           }}
           title={
             purchaseStep === 1
@@ -327,9 +405,10 @@ export const MarketplacePage: React.FC = () => {
                   size="sm"
                   onClick={handleInitiateEscrowPurchase}
                   isLoading={isProcessingPurchase}
+                  disabled={isProcessingPurchase}
                   leftIcon={<ShieldCheck className="w-4 h-4" />}
                 >
-                  Confirm & Sign Escrow Lock
+                  {isProcessingPurchase ? 'Locking Funds...' : 'Confirm & Sign Escrow Lock'}
                 </Button>
               </div>
             </div>

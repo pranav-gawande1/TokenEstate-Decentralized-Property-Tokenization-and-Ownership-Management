@@ -4,6 +4,7 @@ import type { Property } from '../../types';
 import { StatusBadge } from '../ui/StatusBadge';
 import { MapPin, Maximize2, ShieldCheck, ArrowRight } from 'lucide-react';
 import { AddressDisplay } from '../ui/AddressDisplay';
+import samplePropertyImage from '../../assets/images/property_bengaluru_estate_1790929235008.jpg';
 
 export const PropertyCard: React.FC<{
   property: Property;
@@ -14,13 +15,12 @@ export const PropertyCard: React.FC<{
       {/* Property Visual */}
       <div className="relative aspect-16/10 bg-slate-900 overflow-hidden">
         <img
-          src={property.image}
+          src={property.image || samplePropertyImage}
           alt={property.title}
           referrerPolicy="no-referrer"
           className="w-full h-full object-cover group-hover:scale-103 transition-transform duration-300"
           onError={(e) => {
-            // Elegant fallback SVG container
-            (e.currentTarget as HTMLElement).style.display = 'none';
+            (e.currentTarget as HTMLImageElement).src = samplePropertyImage;
           }}
         />
         <div className="absolute top-3 left-3 flex items-center gap-1.5 drop-shadow-sm">

@@ -4,6 +4,7 @@ import { StatusBadge } from '../ui/StatusBadge';
 import { AddressDisplay } from '../ui/AddressDisplay';
 import { MapPin, Building, Calendar, Layers, ShieldCheck } from 'lucide-react';
 import { APP_CONFIG } from '../../constants';
+import samplePropertyImage from '../../assets/images/property_bengaluru_estate_1790929235008.jpg';
 
 export const PropertyHeader: React.FC<{
   property: Property;
@@ -20,21 +21,33 @@ export const PropertyHeader: React.FC<{
         }}
       />
 
-      <div className="relative z-10 flex flex-col md:flex-row md:items-start justify-between gap-4">
-        <div>
-          <div className="flex flex-wrap items-center gap-2 text-xs text-slate-400 mb-2">
-            <span className="font-mono font-bold text-cyan-300 bg-cyan-950/80 border border-cyan-800/80 px-2 py-0.5 rounded">
-              {property.id}
-            </span>
-            <span>·</span>
-            <span className="text-slate-300">Survey {property.surveyNumber}</span>
-            <span>·</span>
-            <span className="text-slate-400 font-mono">Ref: {property.governmentRegistrationRef}</span>
+      <div className="relative z-10 flex flex-col md:flex-row md:items-start justify-between gap-6">
+        <div className="flex flex-col sm:flex-row gap-5 items-start">
+          <div className="w-24 h-24 sm:w-28 sm:h-28 rounded-xl overflow-hidden border border-slate-700/80 shrink-0 shadow-md bg-slate-900">
+            <img
+              src={property.image || samplePropertyImage}
+              alt={property.title}
+              className="w-full h-full object-cover"
+              onError={(e) => {
+                (e.currentTarget as HTMLImageElement).src = samplePropertyImage;
+              }}
+            />
           </div>
 
-          <h1 className="text-xl md:text-2xl font-extrabold text-white tracking-tight">
-            {property.title}
-          </h1>
+          <div>
+            <div className="flex flex-wrap items-center gap-2 text-xs text-slate-400 mb-2">
+              <span className="font-mono font-bold text-cyan-300 bg-cyan-950/80 border border-cyan-800/80 px-2 py-0.5 rounded">
+                {property.id}
+              </span>
+              <span>·</span>
+              <span className="text-slate-300">Survey {property.surveyNumber}</span>
+              <span>·</span>
+              <span className="text-slate-400 font-mono">Ref: {property.governmentRegistrationRef}</span>
+            </div>
+
+            <h1 className="text-xl md:text-2xl font-extrabold text-white tracking-tight">
+              {property.title}
+            </h1>
 
           <div className="flex flex-wrap items-center gap-4 text-xs text-slate-300 mt-2">
             <span className="flex items-center gap-1">
@@ -51,6 +64,7 @@ export const PropertyHeader: React.FC<{
             </span>
           </div>
         </div>
+      </div>
 
         <div className="flex flex-wrap items-center gap-2 md:self-start">
           <StatusBadge status={property.status} size="md" />
