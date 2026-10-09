@@ -20,4 +20,8 @@ dependencies = [
     "transformers>=5.18.0",
     "uvicorn>=0.54.0",
     "web3>=8.0.0",
+    "pyjwt>=2.8.0",
+    "passlib[bcrypt]>=1.7.4",
+    "bcrypt>=4.0.0",
+    "supabase>=2.32.0",
 ]
