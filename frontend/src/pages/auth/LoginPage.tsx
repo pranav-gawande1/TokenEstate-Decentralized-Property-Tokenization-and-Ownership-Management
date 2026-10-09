@@ -1,157 +1,180 @@
-import React, { useState } from 'react';
-import { useNavigate, Link } from 'react-router-dom';
+
+import { useState, type FormEvent } from 'react';
+import { Link, useLocation, useNavigate } from 'react-router-dom';
+import { Mail, Lock, LogIn, Eye, EyeOff, Loader2 } from 'lucide-react';
+
 import { Button } from '../../components/ui/Button';
 import { Input } from '../../components/ui/Input';
 import { Card } from '../../components/ui/Card';
-import { Select } from '../../components/ui/Select';
-import { Mail, Lock, LogIn } from 'lucide-react';
 
-const DEMO_ACCOUNTS: Record<string, {email: string, password: string}> = {
-  admin: { email: 'admin@tokenestate.io', password: 'adminpassword123' },
-  officer: { email: 'officer@tokenestate.io', password: 'officerpassword123' },
-  owner: { email: 'owner@tokenestate.io', password: 'ownerpassword123' },
-  buyer: { email: 'buyer@tokenestate.io', password: 'buyerpassword123' },
-};
+const API_URL = 'http://localhost:8000/api/v1/auth';
 
 export function LoginPage() {
   const navigate = useNavigate();
+  const location = useLocation();
+
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
-  const [role, setRole] = useState('');
+  const [showPassword, setShowPassword] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
+  const [error, setError] = useState('');
 
-  const handleRoleSelect = (e: React.ChangeEvent<HTMLSelectElement>) => {
-    const selectedRole = e.target.value;
-    setRole(selectedRole);
-    if (selectedRole && DEMO_ACCOUNTS[selectedRole]) {
-      setEmail(DEMO_ACCOUNTS[selectedRole].email);
-      setPassword(DEMO_ACCOUNTS[selectedRole].password);
-    } else {
-      setEmail('');
-      setPassword('');
-    }
-  };
+  const successMessage = (
+    location.state as { message?: string } | null
+  )?.message;
 
-  const handleSubmit = async (e: React.FormEvent) => {
+  const handleSubmit = async (e: FormEvent<HTMLFormElement>) => {
     e.preventDefault();
+    setError('');
     setIsLoading(true);
-    
+
     try {
-      const response = await fetch('http://localhost:8000/api/v1/auth/login', {
+      // This assumes the backend login endpoint accepts JSON credentials.
+      const response = await fetch(`${API_URL}/login`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
-          username_or_email: email,
-          password: password
+          email: email.trim().toLowerCase(),
+          password,
         }),
       });
-      
-      if (response.ok) {
-        const data = await response.json();
-        localStorage.setItem('token', data.access_token);
-        if (data.user) {
-          localStorage.setItem('user', JSON.stringify(data.user));
-        }
-        navigate('/dashboard');
-      } else {
-        const errData = await response.json();
-        alert(errData.detail || 'Login failed');
+
+      const data = await response.json().catch(() => ({}));
+
+      if (!response.ok) {
+        const message = Array.isArray(data.detail)
+          ? data.detail.map((item: { msg?: string }) => item.msg).join(', ')
+          : data.detail;
+
+        throw new Error(message || 'Invalid email or password.');
       }
-    } catch (error) {
-      console.error('Login error', error);
-      alert('Network error connecting to backend');
+
+      if (!data.access_token) {
+        throw new Error('Login response did not contain an access token.');
+      }
+
+      localStorage.setItem('token', data.access_token);
+
+      if (data.user) {
+        localStorage.setItem('user', JSON.stringify(data.user));
+      }
+
+      navigate('/dashboard', { replace: true });
+    } catch (err) {
+      setError(
+        err instanceof Error
+          ? err.message
+          : 'Unable to connect to the server. Please try again.',
+      );
     } finally {
       setIsLoading(false);
     }
   };
 
   return (
-    <div className="flex items-center justify-center min-h-[calc(100vh-4rem)] py-12 px-4 sm:px-6 lg:px-8">
-      <Card className="w-full max-w-md p-8 space-y-8 shadow-xl">
+    <div className="flex min-h-[calc(100vh-4rem)] items-center justify-center bg-slate-50 px-4 py-12 sm:px-6 lg:px-8">
+      <Card className="w-full max-w-md space-y-6 rounded-2xl p-8 shadow-xl">
         <div className="text-center">
-          <h2 className="mt-6 text-3xl font-bold tracking-tight text-slate-900">
-            Log in to your account
-          </h2>
+          <div className="mx-auto flex h-14 w-14 items-center justify-center rounded-2xl bg-slate-900 text-white">
+            <LogIn className="h-7 w-7" />
+          </div>
+
+          <h1 className="mt-5 text-3xl font-bold tracking-tight text-slate-900">
+            Welcome back
+          </h1>
+
           <p className="mt-2 text-sm text-slate-600">
-            Or{' '}
-            <Link to="/signup" className="font-medium text-slate-900 hover:text-slate-800 underline">
-              create a new account
-            </Link>
+            Log in to your TokenEstate account.
           </p>
         </div>
-        <form className="mt-8 space-y-6" onSubmit={handleSubmit}>
-          <div className="space-y-4">
-            <Select
-              label="Quick Login (Demo Accounts)"
-              id="demo-role"
-              name="demo-role"
-              value={role}
-              onChange={handleRoleSelect}
-              options={[
-                { value: '', label: '-- Select a Demo User --' },
-                { value: 'admin', label: 'Admin (admin@tokenestate.io)' },
-                { value: 'officer', label: 'Government Officer (officer@tokenestate.io)' },
-                { value: 'owner', label: 'Property Owner (owner@tokenestate.io)' },
-                { value: 'buyer', label: 'Buyer (buyer@tokenestate.io)' }
-              ]}
-              helperText="Selecting a role will auto-fill the credentials below."
-            />
-            <Input
-              label="Email address"
-              id="email-address"
-              name="email"
-              type="email"
-              autoComplete="email"
-              required
-              value={email}
-              onChange={(e) => setEmail(e.target.value)}
-              leftIcon={<Mail className="h-5 w-5" />}
-              placeholder="Email address"
-            />
+
+        {successMessage && (
+          <div
+            role="status"
+            className="rounded-lg border border-green-200 bg-green-50 px-4 py-3 text-sm text-green-700"
+          >
+            {successMessage}
+          </div>
+        )}
+
+        {error && (
+          <div
+            role="alert"
+            className="rounded-lg border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-700"
+          >
+            {error}
+          </div>
+        )}
+
+        <form onSubmit={handleSubmit} className="space-y-5">
+          <Input
+            label="Email Address"
+            id="email-address"
+            name="email"
+            type="email"
+            autoComplete="email"
+            required
+            value={email}
+            onChange={(e) => setEmail(e.target.value)}
+            leftIcon={<Mail className="h-5 w-5" />}
+            placeholder="you@example.com"
+          />
+
+          <div className="relative">
             <Input
               label="Password"
               id="password"
               name="password"
-              type="password"
+              type={showPassword ? 'text' : 'password'}
               autoComplete="current-password"
               required
               value={password}
               onChange={(e) => setPassword(e.target.value)}
               leftIcon={<Lock className="h-5 w-5" />}
-              placeholder="Password"
+              placeholder="Enter your password"
             />
-          </div>
 
-          <div className="flex items-center justify-between">
-            <div className="flex items-center">
-              <input
-                id="remember-me"
-                name="remember-me"
-                type="checkbox"
-                className="h-4 w-4 rounded border-slate-300 text-slate-900 focus:ring-slate-900"
-              />
-              <label htmlFor="remember-me" className="ml-2 block text-sm text-slate-900">
-                Remember me
-              </label>
-            </div>
-
-            <div className="text-sm">
-              <a href="#" className="font-medium text-slate-900 hover:text-slate-800 underline">
-                Forgot password?
-              </a>
-            </div>
+            <button
+              type="button"
+              onClick={() => setShowPassword((current) => !current)}
+              aria-label={showPassword ? 'Hide password' : 'Show password'}
+              className="absolute right-3 top-9 text-slate-500 hover:text-slate-900"
+            >
+              {showPassword ? (
+                <EyeOff className="h-5 w-5" />
+              ) : (
+                <Eye className="h-5 w-5" />
+              )}
+            </button>
           </div>
 
           <Button
             type="submit"
             className="w-full"
             isLoading={isLoading}
-            leftIcon={<LogIn className="h-5 w-5" />}
+            leftIcon={
+              isLoading ? (
+                <Loader2 className="h-5 w-5 animate-spin" />
+              ) : (
+                <LogIn className="h-5 w-5" />
+              )
+            }
           >
-            Log in
+            {isLoading ? 'Logging in...' : 'Log in'}
           </Button>
         </form>
+
+        <p className="text-center text-sm text-slate-600">
+          Don't have an account?{' '}
+          <Link
+            to="/signup"
+            className="font-semibold text-slate-900 underline hover:text-slate-700"
+          >
+            Create an account
+          </Link>
+        </p>
       </Card>
     </div>
   );
 }
+
