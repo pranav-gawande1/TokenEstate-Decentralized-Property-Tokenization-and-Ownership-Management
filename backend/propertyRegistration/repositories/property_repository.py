@@ -3,7 +3,7 @@ from uuid import UUID
 from sqlalchemy import func, select
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from models.property import BlockchainStatus, Property
+from propertyRegistration.models.property import BlockchainStatus, Property
 
 
 class PropertyRepository:

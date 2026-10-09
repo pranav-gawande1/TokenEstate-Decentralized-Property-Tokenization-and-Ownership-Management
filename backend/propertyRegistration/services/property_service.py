@@ -3,13 +3,13 @@ from uuid import UUID
 
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from core.exceptions import PropertyAlreadyExistsError, PropertyNotFoundError, UnauthorizedRegistrationError, WalletNotVerifiedError
-from models.property import BlockchainStatus, Property, RegistrationStatus
-from repositories.property_repository import PropertyRepository
-from schemas.property import PropertyRegistrationRequest
-from services.blockchain.blockchain_interface import BlockchainService, TransactionStatus
-from utils.metadata_hash import metadata_sha256
-from utils.wallet import WalletVerificationService, validate_wallet_address
+from propertyRegistration.core.exceptions import PropertyAlreadyExistsError, PropertyNotFoundError, UnauthorizedRegistrationError, WalletNotVerifiedError
+from propertyRegistration.models.property import BlockchainStatus, Property, RegistrationStatus
+from propertyRegistration.repositories.property_repository import PropertyRepository
+from propertyRegistration.schemas.property import PropertyRegistrationRequest
+from propertyRegistration.services.blockchain.blockchain_interface import BlockchainService, TransactionStatus
+from propertyRegistration.utils.metadata_hash import metadata_sha256
+from propertyRegistration.utils.wallet import WalletVerificationService, validate_wallet_address
 
 
 class PropertyService:

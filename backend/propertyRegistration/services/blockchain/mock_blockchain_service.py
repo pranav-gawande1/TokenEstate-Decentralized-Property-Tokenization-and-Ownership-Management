@@ -1,8 +1,8 @@
 import hashlib
 import time
 
-from app.core.exceptions import BlockchainTransactionError, BlockchainVerificationError
-from app.services.blockchain.blockchain_interface import (
+from propertyRegistration.core.exceptions import BlockchainTransactionError, BlockchainVerificationError
+from propertyRegistration.services.blockchain.blockchain_interface import (
     BlockchainProperty,
     BlockchainRegistrationResult,
     TransactionStatus,

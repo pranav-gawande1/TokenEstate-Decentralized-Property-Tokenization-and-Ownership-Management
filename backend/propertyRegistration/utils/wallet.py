@@ -1,6 +1,6 @@
 import re
 
-from core.exceptions import InvalidWalletError, WalletNotVerifiedError
+from propertyRegistration.core.exceptions import InvalidWalletError, WalletNotVerifiedError
 
 _ADDRESS_RE = re.compile(r"^0x[a-fA-F0-9]{40}$")
 

@@ -3,16 +3,15 @@ from uuid import UUID
 from fastapi import APIRouter, Depends, Query
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from dependencies import AuthenticatedUser, get_current_user, get_property_service
-from core.exceptions import (
+from propertyRegistration.api.dependencies import AuthenticatedUser, get_current_user, get_property_service
+from propertyRegistration.core.exceptions import (
     BlockchainTransactionError, BlockchainVerificationError, InvalidWalletError,
     PropertyAlreadyExistsError, PropertyNotFoundError, UnauthorizedRegistrationError, WalletNotVerifiedError,
 )
-from schemas.property import BlockchainDetailsResponse, PaginatedProperties, PropertyRegistrationRequest, PropertyResponse, VerificationResponse
-from services.property_service import PropertyService
+from propertyRegistration.schemas.property import BlockchainDetailsResponse, PaginatedProperties, PropertyRegistrationRequest, PropertyResponse, VerificationResponse
+from propertyRegistration.services.property_service import PropertyService
 
 router = APIRouter(prefix="/api/v1/properties", tags=["Property Registration"])
-
 
 @router.post("", response_model=PropertyResponse, status_code=201)
 async def register_property(

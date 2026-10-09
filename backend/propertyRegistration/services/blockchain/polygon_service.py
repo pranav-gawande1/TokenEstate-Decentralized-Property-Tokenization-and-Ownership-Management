@@ -6,9 +6,9 @@ from eth_account import Account
 from web3 import Web3
 from web3.exceptions import TimeExhausted, TransactionNotFound, Web3Exception
 
-from app.core.exceptions import BlockchainConnectionError, BlockchainTransactionError, BlockchainVerificationError
-from app.services.blockchain.blockchain_interface import BlockchainProperty, BlockchainRegistrationResult, TransactionStatus
-from app.core.config import Settings
+from propertyRegistration.core.exceptions import BlockchainConnectionError, BlockchainTransactionError, BlockchainVerificationError
+from propertyRegistration.services.blockchain.blockchain_interface import BlockchainProperty, BlockchainRegistrationResult, TransactionStatus
+from propertyRegistration.core.config import Settings
 
 
 class PolygonBlockchainService:
