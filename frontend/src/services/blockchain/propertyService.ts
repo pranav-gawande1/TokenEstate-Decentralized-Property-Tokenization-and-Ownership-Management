@@ -10,6 +10,17 @@ class PropertyService {
   private properties: Property[] = [];
   private listeners: Array<() => void> = [];
 
+  public subscribe(callback: () => void): () => void {
+    this.listeners.push(callback);
+
+return () => {
+  this.listeners = this.listeners.filter(
+    (listener) => listener !== callback,
+  );
+};
+
+  }
+
   private notify(): void {
     this.listeners.forEach((listener) => listener());
   }
