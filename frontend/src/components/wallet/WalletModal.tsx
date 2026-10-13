@@ -44,6 +44,12 @@ export const WalletModal: React.FC = () => {
       desc: 'Inspect tamper-evident ledger events, fraud checks & double-registration flags',
       address: DEMO_WALLETS.auditor.address,
     },
+    {
+      role: 'admin',
+      title: DEMO_WALLETS.admin.label,
+      desc: 'Full administrative access, cadastral system orchestration, and platform settings',
+      address: DEMO_WALLETS.admin.address,
+    },
   ];
 
   return (

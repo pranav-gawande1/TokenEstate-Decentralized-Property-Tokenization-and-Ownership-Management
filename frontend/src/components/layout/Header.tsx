@@ -1,305 +1,113 @@
-import React, { useState } from 'react';
-import { Link, useLocation } from 'react-router-dom';
-import { WalletButton } from '../wallet/WalletButton';
-import { NetworkBadge } from '../wallet/NetworkBadge';
-import { WalletModal } from '../wallet/WalletModal';
-import {
-  Menu,
-  X,
-  Shield,
-} from 'lucide-react';
-import { useWallet } from '../../context/WalletContext';
+
+import React, { useEffect, useState } from 'react';
+import { Link, NavLink, useNavigate } from 'react-router-dom';
+import { LogOut } from 'lucide-react';
+import { supabase } from '../../lib/supabase';
 
 export const Header: React.FC = () => {
-  const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
+  const navigate = useNavigate();
+  const [isAuthenticated, setIsAuthenticated] = useState<boolean>(() => {
+    return Boolean(localStorage.getItem('token') || localStorage.getItem('user'));
+  });
 
-  const location = useLocation();
-  const { role } = useWallet();
+  useEffect(() => {
+    // Check initial session
+    supabase.auth.getSession().then(({ data: { session } }) => {
+      setIsAuthenticated(Boolean(session || localStorage.getItem('token')));
+    });
 
-  const navLinks = [
-    { label: 'Dashboard', href: '/dashboard' },
-    { label: 'Properties', href: '/properties' },
-    { label: 'Marketplace', href: '/marketplace' },
-    { label: 'Verification', href: '/verification' },
-    { label: 'Transfers', href: '/transfers' },
-    { label: 'Audit Trail', href: '/audit' },
-  ];
+    // Listen for auth state changes (login, signup, logout)
+    const {
+      data: { subscription },
+    } = supabase.auth.onAuthStateChange((_event, session) => {
+      setIsAuthenticated(Boolean(session));
+    });
+
+    return () => {
+      subscription.unsubscribe();
+    };
+  }, []);
+
+  const handleLogout = async () => {
+    try {
+      await supabase.auth.signOut();
+    } catch (err) {
+      console.warn('SignOut error:', err);
+    } finally {
+      localStorage.removeItem('token');
+      localStorage.removeItem('user');
+      setIsAuthenticated(false);
+      navigate('/login', { replace: true });
+    }
+  };
+
+  const navLinkClass = ({ isActive }: { isActive: boolean }) =>
+    `whitespace-nowrap text-sm font-medium transition-colors ${
+      isActive
+        ? 'text-blue-600'
+        : 'text-slate-600 hover:text-blue-600'
+    }`;
 
   return (
-    <header className="sticky top-0 z-40 w-full bg-[#0B132B] text-white border-b border-slate-800/90 shadow-sm">
+    <header className="relative z-50 w-full border-b border-slate-200 bg-white shadow-sm">
+      <div className="flex min-h-16 w-full items-center justify-between gap-4 px-4 sm:px-6">
 
-      {/* =====================================================
-          DESKTOP HEADER
-      ====================================================== */}
-
-      <div className="w-full h-16 px-4 sm:px-6 lg:px-8 flex items-center gap-4">
-
-        {/* =================================================
-            LOGO
-        ================================================== */}
-
-        <Link
-          to="/"
-          className="flex items-center gap-2 shrink-0 group"
-        >
-          <div className="w-8 h-8 rounded-lg bg-gradient-to-br from-blue-500 to-indigo-700 flex items-center justify-center shadow-sm transition-transform group-hover:scale-105">
-            <Shield className="w-4 h-4 text-white" />
-          </div>
-
-          <span className="text-lg font-extrabold tracking-tight">
-            Cadastra
+        {/* Logo */}
+        <Link to="/" className="flex shrink-0 items-center gap-2">
+          <span className="flex h-9 w-9 items-center justify-center rounded-lg bg-blue-600 font-bold text-white">
+            T
           </span>
-
-          <span className="hidden sm:inline-flex text-[10px] uppercase font-mono font-bold tracking-widest text-blue-400 bg-blue-950/80 border border-blue-800/60 px-1.5 py-0.5 rounded">
-            WEB3
+          <span className="whitespace-nowrap text-lg font-bold text-slate-900">
+            TokenEstate
           </span>
         </Link>
 
-        {/* =================================================
-            NAVIGATION
-        ================================================== */}
+        {/* Main Navigation */}
+        <nav className="hidden items-center gap-4 md:flex lg:gap-6">
+          <NavLink to="/dashboard" className={navLinkClass}>
+            Dashboard
+          </NavLink>
+          <NavLink to="/properties" className={navLinkClass}>
+            Properties
+          </NavLink>
+          <NavLink to="/marketplace" className={navLinkClass}>
+            Marketplace
+          </NavLink>
+        </nav>
 
-        {/* <nav className="hidden lg:flex items-center gap-1 ml-6 flex-1">
-          {navLinks.map((link) => {
-            const isActive =
-              location.pathname === link.href ||
-              location.pathname.startsWith(`${link.href}/`);
-
-            return (
-              <Link
-                key={link.href}
-                to={link.href}
-                className={`
-                  whitespace-nowrap
-                  px-3
-                  py-2
-                  rounded-lg
-                  text-sm
-                  font-medium
-                  transition-colors
-
-                  ${
-                    isActive
-                      ? 'bg-slate-800 text-white'
-                      : 'text-slate-300 hover:text-white hover:bg-slate-800/60'
-                  }
-                `}
-              >
-                {link.label}
-              </Link>
-            );
-          })}
-        </nav> */}
-
-        {/* =================================================
-            RIGHT SIDE
-        ================================================== */}
-
-        <div className="ml-auto flex items-center gap-2 sm:gap-3 shrink-0">
-
-          <div className="hidden sm:flex">
-            <NetworkBadge />
-          </div>
-
-          {!localStorage.getItem('token') ? (
-            <div className="hidden sm:flex items-center gap-1">
-              <Link to="/login" className="text-sm font-medium text-slate-300 hover:text-white hover:bg-slate-800/60 px-3 py-2 rounded-lg transition-colors">
-                Log in
-              </Link>
-              <Link to="/signup" className="text-sm font-medium text-white bg-blue-600 hover:bg-blue-700 px-3 py-2 rounded-lg transition-colors">
-                Sign up
-              </Link>
-            </div>
-          ) : (
+        {/* Action Button: Logout if authenticated, otherwise Login & Signup */}
+        <div className="ml-auto flex shrink-0 items-center gap-2">
+          {isAuthenticated ? (
             <button
-              onClick={() => {
-                localStorage.removeItem('token');
-                localStorage.removeItem('user');
-                window.location.href = '/';
-              }}
-              className="hidden sm:flex text-sm font-medium text-slate-300 hover:text-white hover:bg-slate-800/60 px-3 py-2 rounded-lg transition-colors"
+              type="button"
+              onClick={handleLogout}
+              className="inline-flex items-center justify-center gap-2 whitespace-nowrap rounded-lg border border-slate-300 bg-white px-4 py-2 text-sm font-semibold text-red-600 hover:bg-red-50 hover:border-red-300 transition-colors cursor-pointer"
             >
-              Log out
+              <LogOut className="h-4 w-4" />
+              Logout
             </button>
+          ) : (
+            <>
+              <Link
+                to="/login"
+                className="inline-flex items-center justify-center whitespace-nowrap rounded-lg border border-slate-300 bg-white px-4 py-2 text-sm font-semibold text-slate-700 hover:bg-slate-100"
+              >
+                Login
+              </Link>
+
+              <Link
+                to="/signup"
+                className="inline-flex items-center justify-center whitespace-nowrap rounded-lg bg-blue-600 px-4 py-2 text-sm font-semibold text-white hover:bg-blue-700"
+              >
+                Sign Up
+              </Link>
+            </>
           )}
-
-          <WalletButton />
-
-          <button
-            type="button"
-            onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
-            aria-label="Toggle navigation menu"
-            aria-expanded={mobileMenuOpen}
-            className="
-              lg:hidden
-              p-2
-              rounded-lg
-              text-slate-300
-              hover:text-white
-              hover:bg-slate-800
-              transition-colors
-            "
-          >
-            {mobileMenuOpen ? (
-              <X className="w-5 h-5" />
-            ) : (
-              <Menu className="w-5 h-5" />
-            )}
-          </button>
-
         </div>
       </div>
-
-      {/* =====================================================
-          MOBILE MENU
-      ====================================================== */}
-
-      {mobileMenuOpen && (
-        <div className="lg:hidden border-t border-slate-800 bg-[#0B132B] px-4 py-4">
-
-          <div className="mb-4">
-            <NetworkBadge />
-          </div>
-
-          <nav className="space-y-1">
-            {navLinks.map((link) => {
-              const isActive =
-                location.pathname === link.href ||
-                location.pathname.startsWith(`${link.href}/`);
-
-              return (
-                <Link
-                  key={link.href}
-                  to={link.href}
-                  onClick={() => setMobileMenuOpen(false)}
-                  className={`
-                    block
-                    px-3
-                    py-2.5
-                    rounded-lg
-                    text-sm
-                    font-medium
-
-                    ${
-                      isActive
-                        ? 'bg-blue-600 text-white'
-                        : 'text-slate-300 hover:bg-slate-800 hover:text-white'
-                    }
-                  `}
-                >
-                  {link.label}
-                </Link>
-              );
-            })}
-          </nav>
-
-          {/* Mobile actions */}
-
-          <div className="mt-4 pt-4 border-t border-slate-800 space-y-2">
-
-            {!localStorage.getItem('token') ? (
-              <>
-                <Link
-                  to="/login"
-                  onClick={() => setMobileMenuOpen(false)}
-                  className="block w-full px-3 py-2.5 rounded-lg text-sm font-semibold text-center text-slate-300 bg-slate-800 hover:text-white hover:bg-slate-700"
-                >
-                  Log in
-                </Link>
-                <Link
-                  to="/signup"
-                  onClick={() => setMobileMenuOpen(false)}
-                  className="block w-full px-3 py-2.5 rounded-lg text-sm font-semibold text-center text-white bg-blue-600 hover:bg-blue-700"
-                >
-                  Sign up
-                </Link>
-              </>
-            ) : (
-              <button
-                onClick={() => {
-                  localStorage.removeItem('token');
-                  localStorage.removeItem('user');
-                  window.location.href = '/';
-                }}
-                className="block w-full px-3 py-2.5 rounded-lg text-sm font-semibold text-center text-slate-300 bg-slate-800 hover:text-white hover:bg-slate-700"
-              >
-                Log out
-              </button>
-            )}
-
-            <Link
-              to="/properties/register"
-              onClick={() => setMobileMenuOpen(false)}
-              className="
-                block
-                w-full
-                px-3
-                py-2.5
-                rounded-lg
-                text-sm
-                font-semibold
-                text-center
-                text-white
-                bg-blue-600
-                hover:bg-blue-700
-              "
-            >
-              Register New Property
-            </Link>
-
-            {role === 'officer' && (
-              <Link
-                to="/government/registrations"
-                onClick={() => setMobileMenuOpen(false)}
-                className="
-                  block
-                  w-full
-                  px-3
-                  py-2.5
-                  rounded-lg
-                  text-sm
-                  font-semibold
-                  text-center
-                  text-emerald-300
-                  bg-emerald-950/80
-                  border
-                  border-emerald-800/80
-                "
-              >
-                Government Registrar Desk
-              </Link>
-            )}
-
-            {role === 'auditor' && (
-              <Link
-                to="/admin/fraud-detection"
-                onClick={() => setMobileMenuOpen(false)}
-                className="
-                  block
-                  w-full
-                  px-3
-                  py-2.5
-                  rounded-lg
-                  text-sm
-                  font-semibold
-                  text-center
-                  text-amber-300
-                  bg-amber-950/80
-                  border
-                  border-amber-800/80
-                "
-              >
-                Compliance & Fraud Console
-              </Link>
-            )}
-
-          </div>
-        </div>
-      )}
-
-      {/* Global wallet modal */}
-      <WalletModal />
-
     </header>
   );
 };
+
+export default Header;
+

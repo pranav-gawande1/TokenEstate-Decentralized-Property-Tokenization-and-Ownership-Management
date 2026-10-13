@@ -1,4 +1,4 @@
-export type UserRole = 'owner' | 'buyer' | 'officer' | 'auditor';
+export type UserRole = 'owner' | 'buyer' | 'officer' | 'auditor' | 'admin';
 
 export type PropertyStatus = 
   | 'draft'

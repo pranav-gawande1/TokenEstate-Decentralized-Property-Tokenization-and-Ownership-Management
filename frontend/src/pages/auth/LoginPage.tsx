@@ -6,8 +6,7 @@ import { Mail, Lock, LogIn, Eye, EyeOff, Loader2 } from 'lucide-react';
 import { Button } from '../../components/ui/Button';
 import { Input } from '../../components/ui/Input';
 import { Card } from '../../components/ui/Card';
-
-const API_URL = 'http://localhost:8000/api/v1/auth';
+import { supabase } from '../../lib/supabase';
 
 export function LoginPage() {
   const navigate = useNavigate();
@@ -29,42 +28,38 @@ export function LoginPage() {
     setIsLoading(true);
 
     try {
-      // This assumes the backend login endpoint accepts JSON credentials.
-      const response = await fetch(`${API_URL}/login`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
+      const { data, error: loginError } =
+        await supabase.auth.signInWithPassword({
           email: email.trim().toLowerCase(),
           password,
+        });
+
+      if (loginError) {
+        throw loginError;
+      }
+
+      if (!data.session) {
+        throw new Error('Login failed. Please try again.');
+      }
+
+      // Preserve compatibility with existing application code.
+      localStorage.setItem('token', data.session.access_token);
+
+      localStorage.setItem(
+        'user',
+        JSON.stringify({
+          id: data.user.id,
+          email: data.user.email,
+          ...data.user.user_metadata,
         }),
-      });
-
-      const data = await response.json().catch(() => ({}));
-
-      if (!response.ok) {
-        const message = Array.isArray(data.detail)
-          ? data.detail.map((item: { msg?: string }) => item.msg).join(', ')
-          : data.detail;
-
-        throw new Error(message || 'Invalid email or password.');
-      }
-
-      if (!data.access_token) {
-        throw new Error('Login response did not contain an access token.');
-      }
-
-      localStorage.setItem('token', data.access_token);
-
-      if (data.user) {
-        localStorage.setItem('user', JSON.stringify(data.user));
-      }
+      );
 
       navigate('/dashboard', { replace: true });
     } catch (err) {
       setError(
         err instanceof Error
           ? err.message
-          : 'Unable to connect to the server. Please try again.',
+          : 'Unable to log in. Please try again.',
       );
     } finally {
       setIsLoading(false);
@@ -177,4 +172,3 @@ export function LoginPage() {
     </div>
   );
 }
-
