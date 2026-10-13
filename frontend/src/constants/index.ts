@@ -53,4 +53,12 @@ export const DEMO_WALLETS = {
     name: 'Cadastral Oversight Directorate',
     balance: '8.40 MATIC',
   },
+  admin: {
+    address: '0x1A2B3C4D5E6F7890123456789ABCDEF012345678',
+    label: 'System Administrator',
+    role: 'admin' as const,
+    name: 'Admin User',
+    department: 'Cadastra Central Authority',
+    balance: '100.00 MATIC',
+  },
 };

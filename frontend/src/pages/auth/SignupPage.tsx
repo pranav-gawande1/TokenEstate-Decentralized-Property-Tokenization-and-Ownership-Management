@@ -62,7 +62,46 @@ export function SignupPage() {
         throw signupError;
       }
 
-      if (data.session) {
+      let session = data.session;
+      let user = data.user;
+
+      // If email confirmation is disabled or session was not attached, sign in directly to open the dashboard
+      if (!session && user) {
+        const { data: signInData, error: signInError } =
+          await supabase.auth.signInWithPassword({
+            email: email.trim().toLowerCase(),
+            password,
+          });
+
+        if (!signInError && signInData.session) {
+          session = signInData.session;
+          user = signInData.user;
+        }
+      }
+
+      if (session && user) {
+        // Ensure profile row exists in public.profiles (including admin role)
+        try {
+          await supabase.from('profiles').upsert({
+            id: user.id,
+            email: user.email,
+            full_name: name.trim(),
+            role,
+          });
+        } catch (profileErr) {
+          console.warn('Profile sync warning:', profileErr);
+        }
+
+        // Persist session tokens and user state for consistent authentication
+        localStorage.setItem('token', session.access_token);
+        localStorage.setItem(
+          'user',
+          JSON.stringify({
+            id: user.id,
+            email: user.email,
+            ...user.user_metadata,
+          }),
+        );
         navigate('/dashboard', { replace: true });
       } else {
         setSuccess(
@@ -181,6 +220,7 @@ export function SignupPage() {
               { value: 'owner', label: 'Property Owner' },
               { value: 'buyer', label: 'Buyer' },
               { value: 'officer', label: 'Government Officer' },
+              { value: 'admin', label: 'System Admin' },
             ]}
           />
 

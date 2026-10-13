@@ -90,6 +90,21 @@ export const LandingNavigation: React.FC = () => {
 
           <WalletButton />
 
+          <div className="flex items-center gap-2">
+            <Link
+              to="/login"
+              className="px-3 py-1.5 rounded-lg text-xs font-semibold text-slate-200 hover:text-white bg-slate-800/80 hover:bg-slate-750 border border-slate-700/80 transition-colors"
+            >
+              Log In
+            </Link>
+            <Link
+              to="/signup"
+              className="px-3 py-1.5 rounded-lg text-xs font-semibold text-white bg-blue-600 hover:bg-blue-500 shadow-sm transition-colors"
+            >
+              Sign Up
+            </Link>
+          </div>
+
           <button
             type="button"
             onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
@@ -161,6 +176,47 @@ export const LandingNavigation: React.FC = () => {
           {/* Mobile actions */}
 
           <div className="mt-4 pt-4 border-t border-slate-800 space-y-2">
+
+            <div className="grid grid-cols-2 gap-2 mb-2">
+              <Link
+                to="/login"
+                onClick={() => setMobileMenuOpen(false)}
+                className="
+                  block
+                  w-full
+                  px-3
+                  py-2
+                  rounded-lg
+                  text-sm
+                  font-semibold
+                  text-center
+                  text-slate-200
+                  bg-slate-800
+                  hover:bg-slate-700
+                "
+              >
+                Log In
+              </Link>
+              <Link
+                to="/signup"
+                onClick={() => setMobileMenuOpen(false)}
+                className="
+                  block
+                  w-full
+                  px-3
+                  py-2
+                  rounded-lg
+                  text-sm
+                  font-semibold
+                  text-center
+                  text-white
+                  bg-blue-600
+                  hover:bg-blue-500
+                "
+              >
+                Sign Up
+              </Link>
+            </div>
 
             <Link
               to="/properties/register"
