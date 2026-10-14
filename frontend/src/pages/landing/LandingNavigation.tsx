@@ -33,15 +33,6 @@ export const LandingNavigation: React.FC = () => {
   const canAudit = hasModulePermission('audit', currentRole);
   const canInstitutional = hasModulePermission('institutional', currentRole);
 
-  const navLinks = [
-    { label: 'Dashboard', href: '/dashboard' },
-    { label: 'Properties', href: '/properties' },
-    ...(canBuyer ? [{ label: 'Marketplace', href: '/marketplace' }] : []),
-    ...(canVerification ? [{ label: 'Verification', href: '/verification' }] : []),
-    { label: 'Transfers', href: '/transfers' },
-    ...(canAudit ? [{ label: 'Audit Trail', href: '/audit' }] : []),
-  ];
-
   return (
     <header className="sticky top-0 z-40 w-full bg-[#0B132B] text-white border-b border-slate-800/90 shadow-sm">
 
@@ -71,38 +62,6 @@ export const LandingNavigation: React.FC = () => {
             </span>
           </div>
         </Link>
-
-        <nav className="hidden lg:flex items-center gap-1 ml-6 flex-1">
-          {navLinks.map((link) => {
-            const isActive =
-              location.pathname === link.href ||
-              location.pathname.startsWith(`${link.href}/`);
-
-            return (
-              <Link
-                key={link.href}
-                to={link.href}
-                className={`
-                  whitespace-nowrap
-                  px-3
-                  py-2
-                  rounded-lg
-                  text-sm
-                  font-medium
-                  transition-colors
-
-                  ${
-                    isActive
-                      ? 'bg-slate-800 text-white'
-                      : 'text-slate-300 hover:text-white hover:bg-slate-800/60'
-                  }
-                `}
-              >
-                {link.label}
-              </Link>
-            );
-          })}
-        </nav>
 
         {/* =================================================
             RIGHT SIDE
@@ -180,38 +139,6 @@ export const LandingNavigation: React.FC = () => {
             <NetworkBadge />
             {isAuthenticated && <WalletButton />}
           </div>
-
-          <nav className="space-y-1">
-            {navLinks.map((link) => {
-              const isActive =
-                location.pathname === link.href ||
-                location.pathname.startsWith(`${link.href}/`);
-
-              return (
-                <Link
-                  key={link.href}
-                  to={link.href}
-                  onClick={() => setMobileMenuOpen(false)}
-                  className={`
-                    block
-                    px-3
-                    py-2.5
-                    rounded-lg
-                    text-sm
-                    font-medium
-
-                    ${
-                      isActive
-                        ? 'bg-blue-600 text-white'
-                        : 'text-slate-300 hover:bg-slate-800 hover:text-white'
-                    }
-                  `}
-                >
-                  {link.label}
-                </Link>
-              );
-            })}
-          </nav>
 
           {/* Mobile actions */}
 
