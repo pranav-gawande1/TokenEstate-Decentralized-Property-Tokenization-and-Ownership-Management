@@ -9,20 +9,28 @@ import { useWallet } from '../../context/WalletContext';
 import { NetworkBadge } from '../../components/wallet/NetworkBadge';
 import { WalletButton } from '../../components/wallet/WalletButton';
 
+import { getActiveRole, hasModulePermission } from '../../utils/permissions';
+
 export const LandingNavigation: React.FC = () => {
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
 
   const location = useLocation();
-  const { role } = useWallet();
+  const { role: walletRole } = useWallet();
+  const currentRole = getActiveRole(walletRole);
 
+  const canBuyer = hasModulePermission('buyer', currentRole);
+  const canOwner = hasModulePermission('owner', currentRole);
+  const canVerification = hasModulePermission('verification', currentRole);
+  const canAudit = hasModulePermission('audit', currentRole);
+  const canInstitutional = hasModulePermission('institutional', currentRole);
 
   const navLinks = [
     { label: 'Dashboard', href: '/dashboard' },
     { label: 'Properties', href: '/properties' },
-    { label: 'Marketplace', href: '/marketplace' },
-    { label: 'Verification', href: '/verification' },
+    ...(canBuyer ? [{ label: 'Marketplace', href: '/marketplace' }] : []),
+    ...(canVerification ? [{ label: 'Verification', href: '/verification' }] : []),
     { label: 'Transfers', href: '/transfers' },
-    { label: 'Audit Trail', href: '/audit' },
+    ...(canAudit ? [{ label: 'Audit Trail', href: '/audit' }] : []),
   ];
 
   return (
@@ -219,27 +227,29 @@ export const LandingNavigation: React.FC = () => {
               </Link>
             </div>
 
-            <Link
-              to="/properties/register"
-              onClick={() => setMobileMenuOpen(false)}
-              className="
-                block
-                w-full
-                px-3
-                py-2.5
-                rounded-lg
-                text-sm
-                font-semibold
-                text-center
-                text-white
-                bg-blue-600
-                hover:bg-blue-700
-              "
-            >
-              Register New Property
-            </Link>
+            {canOwner && (
+              <Link
+                to="/properties/register"
+                onClick={() => setMobileMenuOpen(false)}
+                className="
+                  block
+                  w-full
+                  px-3
+                  py-2.5
+                  rounded-lg
+                  text-sm
+                  font-semibold
+                  text-center
+                  text-white
+                  bg-blue-600
+                  hover:bg-blue-700
+                "
+              >
+                Register New Property
+              </Link>
+            )}
 
-            {role === 'officer' && (
+            {canInstitutional && (
               <Link
                 to="/government/registrations"
                 onClick={() => setMobileMenuOpen(false)}
@@ -262,7 +272,7 @@ export const LandingNavigation: React.FC = () => {
               </Link>
             )}
 
-            {role === 'auditor' && (
+            {(currentRole === 'auditor' || currentRole === 'admin') && (
               <Link
                 to="/admin/fraud-detection"
                 onClick={() => setMobileMenuOpen(false)}

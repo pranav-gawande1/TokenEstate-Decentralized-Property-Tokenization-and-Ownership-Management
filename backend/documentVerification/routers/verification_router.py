@@ -4,7 +4,8 @@ from typing import Optional
 
 import pymupdf
 from PIL import Image
-from fastapi import APIRouter, UploadFile, File, Form, HTTPException, status
+from fastapi import APIRouter, UploadFile, File, Form, HTTPException, status, Request
+from authentication.services.jwt_handler import decode_access_token
 
 from documentVerification.schemas.document_schema import (
     VerificationResponse,
@@ -46,6 +47,7 @@ def get_engine_status():
 
 @router.post("/verify-and-hash", response_model=VerificationResponse)
 async def verify_and_hash_document(
+    request: Request,
     property_id: int = Form(..., description="On-chain Property ID from Property Registration module"),
     doc_type: str = Form("DEED", description="Document category: DEED, TAX_RECEIPT, SURVEY, ENCUMBRANCE"),
     survey_number: Optional[str] = Form(None, description="Expected Survey Number to cross-verify via OCR"),
@@ -56,6 +58,17 @@ async def verify_and_hash_document(
     Executes the 4-Layer AI & Forensic Pipeline, computes Dual Keccak-256 Hashes
     (Raw Binary + Normalized Content), and pins authentic documents to IPFS.
     """
+    auth_header = request.headers.get("Authorization")
+    if auth_header and auth_header.startswith("Bearer "):
+        payload = decode_access_token(auth_header.split(" ", 1)[1].strip())
+        if payload:
+            role = (payload.get("role") or "").lower()
+            if role in ["buyer", "owner"]:
+                raise HTTPException(
+                    status_code=status.HTTP_403_FORBIDDEN,
+                    detail=f"Permission denied. Verification module is restricted to Government Officers and Administrators. Current role: '{role}'."
+                )
+
     if not file.filename or not file.filename.lower().endswith(".pdf"):
         raise HTTPException(
             status_code=status.HTTP_400_BAD_REQUEST,
@@ -70,11 +83,17 @@ async def verify_and_hash_document(
         )
 
     # 1. Run 4-Layer Forensic & AI Inspection
-    fraud_data = analyze_document_fraud(
-        file_bytes=file_bytes,
-        expected_survey_no=survey_number,
-        expected_owner=owner_name
-    )
+    try:
+        fraud_data = analyze_document_fraud(
+            file_bytes=file_bytes,
+            expected_survey_no=survey_number,
+            expected_owner=owner_name
+        )
+    except ValueError as ve:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail=str(ve)
+        )
 
     # 2. Compute Cryptographic Hashes (Raw Binary + Normalized Content + SHA-256)
     raw_keccak = compute_keccak256(file_bytes)

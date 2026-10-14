@@ -19,9 +19,7 @@ export const AppLayout: React.FC = () => {
   const isMarketingRoute =
     location.pathname === '/' ||
     location.pathname === '/about' ||
-    location.pathname === '/features' ||
-    location.pathname === '/login' ||
-    location.pathname === '/signup';
+    location.pathname === '/features';
 
   // ------------------------------------------------------------
   // Breadcrumbs

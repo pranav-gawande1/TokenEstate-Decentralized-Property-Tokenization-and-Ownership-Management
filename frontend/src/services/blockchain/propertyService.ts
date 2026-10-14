@@ -9,7 +9,7 @@ import samplePropertyImage from '../../assets/images/property_bengaluru_estate_1
 
 export const DEFAULT_PROPERTY_IMAGE = samplePropertyImage;
 
-export const PROPERTY_ENDPOINT = '/api/v1/api/v1/properties';
+export const PROPERTY_ENDPOINT = '/api/v1/properties';
 
 export type RegisterPropertyData = Omit<
   Property,

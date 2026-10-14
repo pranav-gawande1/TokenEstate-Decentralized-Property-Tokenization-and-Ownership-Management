@@ -3,6 +3,7 @@ import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom';
 import { ToastProvider } from './context/ToastContext';
 import { WalletProvider } from './context/WalletContext';
 import { AppLayout } from './components/layout/AppLayout';
+import { RoleGuard } from './components/auth/RoleGuard';
 
 // Pages
 import { LandingPage } from './pages/landing/LandingPage';
@@ -35,20 +36,27 @@ export function App() {
         <BrowserRouter>
           <Routes>
             <Route path="/" element={<LandingPage />} />
+            <Route path="/login" element={<LoginPage />} />
+            <Route path="/signup" element={<SignupPage />} />
             <Route element={<AppLayout />}>
               {/* Marketing & Public */}
               <Route path="/about" element={<AboutPage />} />
               <Route path="/features" element={<FeaturesPage />} />
               <Route path="/connect-wallet" element={<Navigate to="/dashboard" replace />} />
-              <Route path="/login" element={<LoginPage />} />
-              <Route path="/signup" element={<SignupPage />} />
 
               {/* Workspace Dashboard */}
               <Route path="/dashboard" element={<DashboardPage />} />
 
               {/* Property Ledger & Management */}
               <Route path="/properties" element={<PropertiesListPage />} />
-              <Route path="/properties/register" element={<PropertyRegisterPage />} />
+              <Route
+                path="/properties/register"
+                element={
+                  <RoleGuard module="owner">
+                    <PropertyRegisterPage />
+                  </RoleGuard>
+                }
+              />
               <Route path="/properties/:id" element={<PropertyDetailsPage />} />
               <Route path="/properties/:id/documents" element={<PropertyDetailsPage />} />
               <Route path="/properties/:id/ownership" element={<PropertyDetailsPage />} />
@@ -56,17 +64,66 @@ export function App() {
               <Route path="/properties/:id/timeline" element={<PropertyDetailsPage />} />
 
               {/* Verification Suite */}
-              <Route path="/verification" element={<DocumentVerificationPage />} />
-              <Route path="/verification/qr" element={<QRVerificationPage />} />
-              <Route path="/verification/document" element={<DocumentVerificationPage />} />
+              <Route
+                path="/verification"
+                element={
+                  <RoleGuard module="verification">
+                    <DocumentVerificationPage />
+                  </RoleGuard>
+                }
+              />
+              <Route
+                path="/verification/qr"
+                element={
+                  <RoleGuard module="verification">
+                    <QRVerificationPage />
+                  </RoleGuard>
+                }
+              />
+              <Route
+                path="/verification/document"
+                element={
+                  <RoleGuard module="verification">
+                    <DocumentVerificationPage />
+                  </RoleGuard>
+                }
+              />
 
-              {/* Tokenization */}
-              <Route path="/tokenization" element={<TokenizationHubPage />} />
-              <Route path="/tokenization/:propertyId" element={<TokenizationHubPage />} />
+              {/* Tokenization Hub (Owner module) */}
+              <Route
+                path="/tokenization"
+                element={
+                  <RoleGuard module="owner">
+                    <TokenizationHubPage />
+                  </RoleGuard>
+                }
+              />
+              <Route
+                path="/tokenization/:propertyId"
+                element={
+                  <RoleGuard module="owner">
+                    <TokenizationHubPage />
+                  </RoleGuard>
+                }
+              />
 
-              {/* Marketplace */}
-              <Route path="/marketplace" element={<MarketplacePage />} />
-              <Route path="/marketplace/:propertyId" element={<MarketplacePage />} />
+              {/* Marketplace (Buyer module) */}
+              <Route
+                path="/marketplace"
+                element={
+                  <RoleGuard module="buyer">
+                    <MarketplacePage />
+                  </RoleGuard>
+                }
+              />
+              <Route
+                path="/marketplace/:propertyId"
+                element={
+                  <RoleGuard module="buyer">
+                    <MarketplacePage />
+                  </RoleGuard>
+                }
+              />
 
               {/* Conveyance & Escrow */}
               <Route path="/transfers" element={<TransfersPage />} />
@@ -79,21 +136,84 @@ export function App() {
               <Route path="/documents/:id" element={<DocumentDetailsPage />} />
 
               {/* Audit & Transaction Trails */}
-              <Route path="/audit" element={<AuditTrailPage />} />
-              <Route path="/audit/events" element={<AuditTrailPage />} />
+              <Route
+                path="/audit"
+                element={
+                  <RoleGuard module="audit">
+                    <AuditTrailPage />
+                  </RoleGuard>
+                }
+              />
+              <Route
+                path="/audit/events"
+                element={
+                  <RoleGuard module="audit">
+                    <AuditTrailPage />
+                  </RoleGuard>
+                }
+              />
               <Route path="/transactions" element={<TransactionDetailsPage />} />
               <Route path="/transactions/:hash" element={<TransactionDetailsPage />} />
 
               {/* Institutional Portals */}
-              <Route path="/government" element={<Navigate to="/government/registrations" replace />} />
-              <Route path="/government/registrations" element={<GovernmentRegistrationsPage />} />
-              <Route path="/government/transfers" element={<TransfersPage />} />
-              <Route path="/government/review/:id" element={<PropertyDetailsPage />} />
+              <Route
+                path="/government"
+                element={
+                  <RoleGuard module="institutional">
+                    <Navigate to="/government/registrations" replace />
+                  </RoleGuard>
+                }
+              />
+              <Route
+                path="/government/registrations"
+                element={
+                  <RoleGuard module="institutional">
+                    <GovernmentRegistrationsPage />
+                  </RoleGuard>
+                }
+              />
+              <Route
+                path="/government/transfers"
+                element={
+                  <RoleGuard module="institutional">
+                    <TransfersPage />
+                  </RoleGuard>
+                }
+              />
+              <Route
+                path="/government/review/:id"
+                element={
+                  <RoleGuard module="institutional">
+                    <PropertyDetailsPage />
+                  </RoleGuard>
+                }
+              />
 
-              {/* Compliance & Fraud */}
-              <Route path="/admin" element={<Navigate to="/admin/fraud-detection" replace />} />
-              <Route path="/admin/analytics" element={<DashboardPage />} />
-              <Route path="/admin/fraud-detection" element={<FraudDetectionPage />} />
+              {/* Compliance & Fraud (Institutional) */}
+              <Route
+                path="/admin"
+                element={
+                  <RoleGuard module="institutional">
+                    <Navigate to="/admin/fraud-detection" replace />
+                  </RoleGuard>
+                }
+              />
+              <Route
+                path="/admin/analytics"
+                element={
+                  <RoleGuard module="institutional">
+                    <DashboardPage />
+                  </RoleGuard>
+                }
+              />
+              <Route
+                path="/admin/fraud-detection"
+                element={
+                  <RoleGuard module="institutional">
+                    <FraudDetectionPage />
+                  </RoleGuard>
+                }
+              />
 
               {/* Settings */}
               <Route path="/settings" element={<Navigate to="/settings/profile" replace />} />

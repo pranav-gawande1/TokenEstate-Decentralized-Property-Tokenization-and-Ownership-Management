@@ -21,8 +21,10 @@ import {
   ArrowRight,
   RefreshCw,
   AlertCircle,
+  ShoppingBag,
 } from 'lucide-react';
 import { authService } from '../../services/authService';
+import { getActiveRole, hasModulePermission } from '../../utils/permissions';
 
 export const DashboardPage: React.FC = () => {
   const { wallet, role, currentRoleInfo } = useWallet();
@@ -51,6 +53,13 @@ export const DashboardPage: React.FC = () => {
       window.removeEventListener('storage', handleAuthChange);
     };
   }, []);
+
+  const currentRole = getActiveRole(role);
+  const canOwner = hasModulePermission('owner', currentRole);
+  const canBuyer = hasModulePermission('buyer', currentRole);
+  const canVerification = hasModulePermission('verification', currentRole);
+  const canAudit = hasModulePermission('audit', currentRole);
+  const canInstitutional = hasModulePermission('institutional', currentRole);
 
   const displayName = currentUser?.full_name || currentUser?.username || currentRoleInfo.name;
 
@@ -144,18 +153,33 @@ export const DashboardPage: React.FC = () => {
               {isPropertiesLoading ? 'Syncing...' : 'Sync'}
             </Button>
 
-            <Link to="/properties/register">
-              <Button
-                variant="primary"
-                size="sm"
-                className="bg-blue-600 hover:bg-blue-500 text-white border-0 shadow-sm"
-                leftIcon={<PlusCircle className="w-4 h-4" />}
-              >
-                Register Land Parcel
-              </Button>
-            </Link>
+            {canOwner && (
+              <Link to="/properties/register">
+                <Button
+                  variant="primary"
+                  size="sm"
+                  className="bg-blue-600 hover:bg-blue-500 text-white border-0 shadow-sm"
+                  leftIcon={<PlusCircle className="w-4 h-4" />}
+                >
+                  Register Land Parcel
+                </Button>
+              </Link>
+            )}
 
-            {role === 'officer' && (
+            {canBuyer && (
+              <Link to="/marketplace">
+                <Button
+                  variant="primary"
+                  size="sm"
+                  className="bg-blue-600 hover:bg-blue-500 text-white border-0 shadow-sm"
+                  leftIcon={<ShoppingBag className="w-4 h-4" />}
+                >
+                  Browse Marketplace
+                </Button>
+              </Link>
+            )}
+
+            {canInstitutional && (
               <Link to="/government/registrations">
                 <Button
                   variant="secondary"
@@ -168,15 +192,17 @@ export const DashboardPage: React.FC = () => {
               </Link>
             )}
 
-            <Link to="/verification/qr">
-              <Button
-                variant="outline"
-                size="sm"
-                className="bg-slate-900/80 hover:bg-slate-800 text-slate-200 border-slate-700"
-              >
-                Verify Pass
-              </Button>
-            </Link>
+            {canVerification && (
+              <Link to="/verification/document">
+                <Button
+                  variant="outline"
+                  size="sm"
+                  className="bg-slate-900/80 hover:bg-slate-800 text-slate-200 border-slate-700"
+                >
+                  Verify Pass
+                </Button>
+              </Link>
+            )}
           </div>
         </div>
       </div>
@@ -292,7 +318,7 @@ export const DashboardPage: React.FC = () => {
       </div>
 
       {/* Role-Specific Alert Banner */}
-      {role === 'officer' && (
+      {canInstitutional && (
         <div className="p-4 bg-emerald-50/80 border border-emerald-200 rounded-xl flex items-center justify-between gap-4 text-xs">
           <div className="flex items-center gap-3">
             <ShieldCheck className="w-5 h-5 text-emerald-700 shrink-0" />
@@ -411,64 +437,66 @@ export const DashboardPage: React.FC = () => {
             </CardContent>
           </Card>
 
-          {/* Blockchain Audit Log Stream */}
-          <Card>
-            <CardHeader
-              title="Immutable Event Stream"
-              subtitle="Latest consensus block emissions"
-              action={
-                <Link
-                  to="/audit"
-                  className="text-xs font-semibold text-slate-800 hover:underline"
-                >
-                  Audit
-                </Link>
-              }
-            />
-            <CardContent className="space-y-3">
-              {isInitialLoading && isPropertiesLoading ? (
-                <div className="space-y-2">
-                  <Skeleton className="h-12 w-full rounded-lg" />
-                  <Skeleton className="h-12 w-full rounded-lg" />
-                  <Skeleton className="h-12 w-full rounded-lg" />
-                </div>
-              ) : recentAudits.length === 0 ? (
-                <p className="text-xs text-slate-400 text-center py-4">
-                  No audit logs recorded yet.
-                </p>
-              ) : (
-                recentAudits.map((evt) => (
-                  <div
-                    key={evt.id}
-                    className="text-xs border-b border-slate-100 pb-2.5 last:border-0 last:pb-0"
+          {/* Blockchain Audit Log Stream (Restricted to Admin & Officer) */}
+          {canAudit && (
+            <Card>
+              <CardHeader
+                title="Immutable Event Stream"
+                subtitle="Latest consensus block emissions"
+                action={
+                  <Link
+                    to="/audit"
+                    className="text-xs font-semibold text-slate-800 hover:underline"
                   >
-                    <div className="flex items-center justify-between text-[11px] text-slate-400 mb-1">
-                      <span className="font-semibold text-slate-800">
-                        {evt.eventType}
-                      </span>
-                      <span className="font-mono">#{evt.blockNumber}</span>
-                    </div>
-                    <p className="text-slate-600 line-clamp-2 leading-relaxed text-[11px]">
-                      {evt.details}
-                    </p>
-                    <div className="mt-1 flex items-center justify-between text-[10px] text-slate-400 font-mono">
-                      <HashDisplay
-                        hash={evt.txHash}
-                        truncateLength={4}
-                        showExplorerLink={false}
-                      />
-                      <span>
-                        {new Date(evt.timestamp).toLocaleTimeString([], {
-                          hour: '2-digit',
-                          minute: '2-digit',
-                        })}
-                      </span>
-                    </div>
+                    Audit
+                  </Link>
+                }
+              />
+              <CardContent className="space-y-3">
+                {isInitialLoading && isPropertiesLoading ? (
+                  <div className="space-y-2">
+                    <Skeleton className="h-12 w-full rounded-lg" />
+                    <Skeleton className="h-12 w-full rounded-lg" />
+                    <Skeleton className="h-12 w-full rounded-lg" />
                   </div>
-                ))
-              )}
-            </CardContent>
-          </Card>
+                ) : recentAudits.length === 0 ? (
+                  <p className="text-xs text-slate-400 text-center py-4">
+                    No audit logs recorded yet.
+                  </p>
+                ) : (
+                  recentAudits.map((evt) => (
+                    <div
+                      key={evt.id}
+                      className="text-xs border-b border-slate-100 pb-2.5 last:border-0 last:pb-0"
+                    >
+                      <div className="flex items-center justify-between text-[11px] text-slate-400 mb-1">
+                        <span className="font-semibold text-slate-800">
+                          {evt.eventType}
+                        </span>
+                        <span className="font-mono">#{evt.blockNumber}</span>
+                      </div>
+                      <p className="text-slate-600 line-clamp-2 leading-relaxed text-[11px]">
+                        {evt.details}
+                      </p>
+                      <div className="mt-1 flex items-center justify-between text-[10px] text-slate-400 font-mono">
+                        <HashDisplay
+                          hash={evt.txHash}
+                          truncateLength={4}
+                          showExplorerLink={false}
+                        />
+                        <span>
+                          {new Date(evt.timestamp).toLocaleTimeString([], {
+                            hour: '2-digit',
+                            minute: '2-digit',
+                          })}
+                        </span>
+                      </div>
+                    </div>
+                  ))
+                )}
+              </CardContent>
+            </Card>
+          )}
         </div>
       </div>
     </div>
