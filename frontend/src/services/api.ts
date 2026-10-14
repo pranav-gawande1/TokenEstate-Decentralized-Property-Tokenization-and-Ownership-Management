@@ -26,10 +26,14 @@ export const apiRequest = async <TResponse, TBody = unknown>({
     responseType = "json",
 }: APIRequestOptions<TBody>): Promise<TResponse> => {
     try {
+        const token = typeof window !== "undefined" ? localStorage.getItem("token") : null;
+        const defaultAuthHeader: Record<string, string> = token ? { Authorization: `Bearer ${token}` } : {};
+
         const options: RequestInit = {
             method,
             credentials: "include",
             headers: {
+                ...defaultAuthHeader,
                 ...headers,
             },
         };

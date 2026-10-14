@@ -1,4 +1,3 @@
-
 import { useState, type FormEvent } from 'react';
 import { Link, useLocation, useNavigate } from 'react-router-dom';
 import { Mail, Lock, LogIn, Eye, EyeOff, Loader2 } from 'lucide-react';
@@ -6,7 +5,7 @@ import { Mail, Lock, LogIn, Eye, EyeOff, Loader2 } from 'lucide-react';
 import { Button } from '../../components/ui/Button';
 import { Input } from '../../components/ui/Input';
 import { Card } from '../../components/ui/Card';
-import { supabase } from '../../lib/supabase';
+import { authService } from '../../services/authService';
 
 export function LoginPage() {
   const navigate = useNavigate();
@@ -28,31 +27,10 @@ export function LoginPage() {
     setIsLoading(true);
 
     try {
-      const { data, error: loginError } =
-        await supabase.auth.signInWithPassword({
-          email: email.trim().toLowerCase(),
-          password,
-        });
-
-      if (loginError) {
-        throw loginError;
-      }
-
-      if (!data.session) {
-        throw new Error('Login failed. Please try again.');
-      }
-
-      // Preserve compatibility with existing application code.
-      localStorage.setItem('token', data.session.access_token);
-
-      localStorage.setItem(
-        'user',
-        JSON.stringify({
-          id: data.user.id,
-          email: data.user.email,
-          ...data.user.user_metadata,
-        }),
-      );
+      await authService.login({
+        username_or_email: email.trim().toLowerCase(),
+        password,
+      });
 
       navigate('/dashboard', { replace: true });
     } catch (err) {
@@ -103,16 +81,16 @@ export function LoginPage() {
 
         <form onSubmit={handleSubmit} className="space-y-5">
           <Input
-            label="Email Address"
+            label="Email Address or Username"
             id="email-address"
             name="email"
-            type="email"
-            autoComplete="email"
+            type="text"
+            autoComplete="username"
             required
             value={email}
             onChange={(e) => setEmail(e.target.value)}
             leftIcon={<Mail className="h-5 w-5" />}
-            placeholder="you@example.com"
+            placeholder="you@example.com or username"
           />
 
           <div className="relative">
@@ -133,7 +111,7 @@ export function LoginPage() {
               type="button"
               onClick={() => setShowPassword((current) => !current)}
               aria-label={showPassword ? 'Hide password' : 'Show password'}
-              className="absolute right-3 top-9 text-slate-500 hover:text-slate-900"
+              className="absolute right-3 top-9 text-slate-500 hover:text-slate-900 cursor-pointer"
             >
               {showPassword ? (
                 <EyeOff className="h-5 w-5" />

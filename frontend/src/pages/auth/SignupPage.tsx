@@ -1,4 +1,3 @@
-
 import { useState, type FormEvent } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import {
@@ -15,7 +14,7 @@ import { Button } from '../../components/ui/Button';
 import { Input } from '../../components/ui/Input';
 import { Card } from '../../components/ui/Card';
 import { Select } from '../../components/ui/Select';
-import { supabase } from '../../lib/supabase';
+import { authService } from '../../services/authService';
 
 export function SignupPage() {
   const navigate = useNavigate();
@@ -27,12 +26,10 @@ export function SignupPage() {
   const [showPassword, setShowPassword] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState('');
-  const [success, setSuccess] = useState('');
 
   const handleSubmit = async (e: FormEvent<HTMLFormElement>) => {
     e.preventDefault();
     setError('');
-    setSuccess('');
 
     if (name.trim().length < 2) {
       setError('Please enter your full name.');
@@ -47,67 +44,21 @@ export function SignupPage() {
     setIsLoading(true);
 
     try {
-      const { data, error: signupError } = await supabase.auth.signUp({
-        email: email.trim().toLowerCase(),
+      const cleanEmail = email.trim().toLowerCase();
+      const derivedUsername =
+        cleanEmail.split('@')[0].replace(/[^a-zA-Z0-9_]/g, '_') ||
+        name.trim().toLowerCase().replace(/[^a-zA-Z0-9_]/g, '_');
+
+      await authService.register({
+        username: derivedUsername,
+        email: cleanEmail,
         password,
-        options: {
-          data: {
-            full_name: name.trim(),
-            role,
-          },
-        },
+        full_name: name.trim(),
+        role,
+        wallet_address: '',
       });
 
-      if (signupError) {
-        throw signupError;
-      }
-
-      let session = data.session;
-      let user = data.user;
-
-      // If email confirmation is disabled or session was not attached, sign in directly to open the dashboard
-      if (!session && user) {
-        const { data: signInData, error: signInError } =
-          await supabase.auth.signInWithPassword({
-            email: email.trim().toLowerCase(),
-            password,
-          });
-
-        if (!signInError && signInData.session) {
-          session = signInData.session;
-          user = signInData.user;
-        }
-      }
-
-      if (session && user) {
-        // Ensure profile row exists in public.profiles (including admin role)
-        try {
-          await supabase.from('profiles').upsert({
-            id: user.id,
-            email: user.email,
-            full_name: name.trim(),
-            role,
-          });
-        } catch (profileErr) {
-          console.warn('Profile sync warning:', profileErr);
-        }
-
-        // Persist session tokens and user state for consistent authentication
-        localStorage.setItem('token', session.access_token);
-        localStorage.setItem(
-          'user',
-          JSON.stringify({
-            id: user.id,
-            email: user.email,
-            ...user.user_metadata,
-          }),
-        );
-        navigate('/dashboard', { replace: true });
-      } else {
-        setSuccess(
-          'Account created! Please check your email to confirm your account, then log in.',
-        );
-      }
+      navigate('/dashboard', { replace: true });
     } catch (err) {
       setError(
         err instanceof Error
@@ -142,15 +93,6 @@ export function SignupPage() {
             className="rounded-lg border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-700"
           >
             {error}
-          </div>
-        )}
-
-        {success && (
-          <div
-            role="status"
-            className="rounded-lg border border-green-200 bg-green-50 px-4 py-3 text-sm text-green-700"
-          >
-            {success}
           </div>
         )}
 
@@ -199,7 +141,7 @@ export function SignupPage() {
               type="button"
               onClick={() => setShowPassword((current) => !current)}
               aria-label={showPassword ? 'Hide password' : 'Show password'}
-              className="absolute right-3 top-9 text-slate-500 hover:text-slate-900"
+              className="absolute right-3 top-9 text-slate-500 hover:text-slate-900 cursor-pointer"
             >
               {showPassword ? (
                 <EyeOff className="h-5 w-5" />

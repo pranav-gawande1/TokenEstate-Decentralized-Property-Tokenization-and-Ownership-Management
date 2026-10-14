@@ -15,6 +15,7 @@ export const LandingNavigation: React.FC = () => {
   const location = useLocation();
   const { role } = useWallet();
 
+
   const navLinks = [
     { label: 'Dashboard', href: '/dashboard' },
     { label: 'Properties', href: '/properties' },

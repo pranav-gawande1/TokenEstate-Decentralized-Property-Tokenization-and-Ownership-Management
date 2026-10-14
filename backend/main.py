@@ -3,9 +3,9 @@ from contextlib import asynccontextmanager
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 
-from database import Base, engine
+from database import Base, engine, AsyncSessionLocal
 
-from authentication.models.models import User  # noqa: F401
+from authentication.models.models import User, seed_demo_users_if_needed  # noqa: F401
 from propertyRegistration.models.property import Property  # noqa: F401
 
 from documentVerification.routers.verification_router import (
@@ -17,10 +17,12 @@ from propertyRegistration.api.routers.properties import router as property_route
 
 @asynccontextmanager
 async def lifespan(app: FastAPI):
-
     try:
         async with engine.begin() as conn:
             await conn.run_sync(Base.metadata.create_all)
+
+        async with AsyncSessionLocal() as session:
+            await seed_demo_users_if_needed(session)
 
     except Exception as e:
         print(type(e).__name__)
@@ -52,13 +54,14 @@ app.add_middleware(
 )
 
 
-app.include_router(document_router,prefix="/api/v1",)
+app.include_router(document_router, prefix="/api/v1")
 
-app.include_router(auth_router,prefix="/api/v1",)
+app.include_router(auth_router, prefix="/api/v1")
 
-app.include_router(user_router,prefix="/api/v1",)
+app.include_router(user_router, prefix="/api/v1")
 
 app.include_router(property_router, prefix="/api/v1")
+
 
 @app.get("/")
 async def health_check():

@@ -1,36 +1,29 @@
-
-import React, { useEffect, useState } from 'react';
-import { Link, NavLink, useNavigate } from 'react-router-dom';
-import { LogOut } from 'lucide-react';
-import { supabase } from '../../lib/supabase';
+import React, { useState } from 'react';
+import { Link, useLocation, useNavigate } from 'react-router-dom';
+import {
+  Menu,
+  X,
+  Shield,
+  LogOut,
+} from 'lucide-react';
+import { useWallet } from '../../context/WalletContext';
+import { NetworkBadge } from '../../components/wallet/NetworkBadge';
+import { WalletButton } from '../../components/wallet/WalletButton';
 
 export const Header: React.FC = () => {
+  const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
+
+  const location = useLocation();
+  const { role } = useWallet();
   const navigate = useNavigate();
+
   const [isAuthenticated, setIsAuthenticated] = useState<boolean>(() => {
     return Boolean(localStorage.getItem('token') || localStorage.getItem('user'));
   });
 
-  useEffect(() => {
-    // Check initial session
-    supabase.auth.getSession().then(({ data: { session } }) => {
-      setIsAuthenticated(Boolean(session || localStorage.getItem('token')));
-    });
-
-    // Listen for auth state changes (login, signup, logout)
-    const {
-      data: { subscription },
-    } = supabase.auth.onAuthStateChange((_event, session) => {
-      setIsAuthenticated(Boolean(session));
-    });
-
-    return () => {
-      subscription.unsubscribe();
-    };
-  }, []);
-
   const handleLogout = async () => {
     try {
-      await supabase.auth.signOut();
+      localStorage.clear();
     } catch (err) {
       console.warn('SignOut error:', err);
     } finally {
@@ -41,63 +34,48 @@ export const Header: React.FC = () => {
     }
   };
 
-  const navLinkClass = ({ isActive }: { isActive: boolean }) =>
-    `whitespace-nowrap text-sm font-medium transition-colors ${
-      isActive
-        ? 'text-blue-600'
-        : 'text-slate-600 hover:text-blue-600'
-    }`;
 
   return (
-    <header className="relative z-50 w-full border-b border-slate-200 bg-white shadow-sm">
-      <div className="flex min-h-16 w-full items-center justify-between gap-4 px-4 sm:px-6">
+    <header className="sticky top-0 z-40 w-full bg-[#0A1021] backdrop-blur-md text-white border-b border-slate-800 shadow-sm">
+      <div className="mx-auto h-16 px-4 sm:px-6 lg:px-8 flex items-center justify-between gap-4">
+        {/* Brand Logo */}
+        <Link to="/" className="flex items-center gap-2.5 shrink-0 group">
+          <div className="w-8 h-8 rounded-lg bg-gradient-to-br from-blue-500 to-indigo-600 flex items-center justify-center shadow-md shadow-blue-500/20 transition-transform group-hover:scale-105">
+            <Shield className="w-4 h-4 text-white" />
+          </div>
 
-        {/* Logo */}
-        <Link to="/" className="flex shrink-0 items-center gap-2">
-          <span className="flex h-9 w-9 items-center justify-center rounded-lg bg-blue-600 font-bold text-white">
-            T
+          <span className="text-lg font-extrabold tracking-tight text-white group-hover:text-blue-400 transition-colors">
+            Cadastra
           </span>
-          <span className="whitespace-nowrap text-lg font-bold text-slate-900">
-            TokenEstate
+
+          <span className="hidden sm:inline-flex text-[10px] uppercase font-mono font-bold tracking-widest text-blue-400 bg-blue-950/80 border border-blue-800/60 px-1.5 py-0.5 rounded">
+            WEB3
           </span>
         </Link>
 
-        {/* Main Navigation */}
-        <nav className="hidden items-center gap-4 md:flex lg:gap-6">
-          <NavLink to="/dashboard" className={navLinkClass}>
-            Dashboard
-          </NavLink>
-          <NavLink to="/properties" className={navLinkClass}>
-            Properties
-          </NavLink>
-          <NavLink to="/marketplace" className={navLinkClass}>
-            Marketplace
-          </NavLink>
-        </nav>
-
-        {/* Action Button: Logout if authenticated, otherwise Login & Signup */}
-        <div className="ml-auto flex shrink-0 items-center gap-2">
+        {/* Actions: Logout if authenticated, otherwise Login & Signup */}
+        <div className="flex shrink-0 items-center gap-2 sm:gap-3">
           {isAuthenticated ? (
             <button
               type="button"
               onClick={handleLogout}
-              className="inline-flex items-center justify-center gap-2 whitespace-nowrap rounded-lg border border-slate-300 bg-white px-4 py-2 text-sm font-semibold text-red-600 hover:bg-red-50 hover:border-red-300 transition-colors cursor-pointer"
+              className="inline-flex items-center justify-center gap-2 rounded-lg border border-red-500/30 bg-red-500/10 px-3.5 py-1.5 text-sm font-medium text-red-400 hover:bg-red-500/20 hover:border-red-500/50 transition-colors cursor-pointer"
             >
               <LogOut className="h-4 w-4" />
-              Logout
+              <span>Logout</span>
             </button>
           ) : (
             <>
               <Link
                 to="/login"
-                className="inline-flex items-center justify-center whitespace-nowrap rounded-lg border border-slate-300 bg-white px-4 py-2 text-sm font-semibold text-slate-700 hover:bg-slate-100"
+                className="inline-flex items-center justify-center rounded-lg border border-slate-700 bg-slate-800/60 px-3.5 py-1.5 text-sm font-medium text-slate-200 hover:bg-slate-700/70 hover:text-white transition-colors"
               >
                 Login
               </Link>
 
               <Link
                 to="/signup"
-                className="inline-flex items-center justify-center whitespace-nowrap rounded-lg bg-blue-600 px-4 py-2 text-sm font-semibold text-white hover:bg-blue-700"
+                className="inline-flex items-center justify-center rounded-lg bg-blue-600 px-3.5 py-1.5 text-sm font-medium text-white shadow-sm shadow-blue-600/30 hover:bg-blue-500 transition-colors"
               >
                 Sign Up
               </Link>
@@ -108,6 +86,3 @@ export const Header: React.FC = () => {
     </header>
   );
 };
-
-export default Header;
-
