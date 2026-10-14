@@ -26,7 +26,7 @@ export const LandingPage: React.FC = () => {
   const sampleTokenized = INITIAL_PROPERTIES[0];
 
   const trustMetrics = [
-    { label: 'Blockchain Network', value: 'Polygon Amoy', sub: 'EVM State Machine' },
+    { label: 'Network Architecture', value: 'Decentralized EVM', sub: 'State Machine' },
     { label: 'Storage Standard', value: 'IPFS / CIDv1', sub: 'Content Addressable' },
     { label: 'Title Deed Standard', value: 'ERC-721', sub: 'Cadastral Tokenization' },
     { label: 'Integrity Protocol', value: 'SHA-256', sub: 'Deed Checksums' },
@@ -69,7 +69,7 @@ export const LandingPage: React.FC = () => {
     },
     {
       title: 'Government Verification',
-      desc: 'Sub-registrar dashboard for cross-referencing state revenue archives, checking duplicate caveats, and signing approvals on Polygon.',
+      desc: 'Sub-registrar dashboard for cross-referencing state revenue archives, checking duplicate caveats, and signing approvals on-chain.',
       icon: <ShieldCheck className="w-5 h-5 text-emerald-700" />,
       link: '/government/registrations',
     },
@@ -138,7 +138,7 @@ export const LandingPage: React.FC = () => {
               <div className="lg:col-span-7 space-y-6">
                 <div className="inline-flex items-center gap-2 text-xs font-semibold text-cyan-300 bg-cyan-950/80 border border-cyan-800/80 px-3 py-1 rounded-full shadow-inner">
                   <span className="w-2 h-2 rounded-full bg-emerald-400 animate-pulse" />
-                  <span>Polygon EVM Cadastral State Machine</span>
+                  <span>EVM Cadastral State Machine</span>
                 </div>
 
                 <h1 className="text-3xl sm:text-4xl lg:text-5xl font-extrabold text-white tracking-tight text-balance leading-[1.15]">
@@ -194,7 +194,7 @@ export const LandingPage: React.FC = () => {
                     <div className="absolute inset-0 bg-gradient-to-t from-slate-950/90 via-slate-950/20 to-transparent flex flex-col justify-end p-5 text-white">
                       <div className="flex items-center justify-between text-xs">
                         <span className="font-mono bg-slate-900/90 px-2 py-0.5 rounded border border-slate-700 text-cyan-300">
-                          Polygon Amoy #15489021
+                          Parcel ID #15489021
                         </span>
                         <span className="text-emerald-400 font-semibold flex items-center gap-1">
                           <CheckCircle2 className="w-3.5 h-3.5" />
@@ -344,8 +344,8 @@ export const LandingPage: React.FC = () => {
                   </div>
                   <div className="text-center text-slate-500">↓</div>
                   <div className="p-2.5 bg-slate-900 rounded border border-slate-800 flex justify-between text-emerald-400">
-                    <span>04. Polygon Network Consensus</span>
-                    <span>Amoy State Root</span>
+                    <span>04. EVM Network Consensus</span>
+                    <span>State Root Finality</span>
                   </div>
                 </div>
               </div>

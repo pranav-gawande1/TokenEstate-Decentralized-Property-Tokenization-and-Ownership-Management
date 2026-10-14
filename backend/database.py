@@ -22,7 +22,7 @@ engine = create_async_engine(
         "statement_cache_size": 0,
     },
     pool_pre_ping=True,
-    echo=True,  # change to False later
+    echo=False,  # change to False later
 )
 
 
