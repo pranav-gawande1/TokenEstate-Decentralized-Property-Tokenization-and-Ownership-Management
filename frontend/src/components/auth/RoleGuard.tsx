@@ -2,6 +2,7 @@ import React from 'react';
 import { Link } from 'react-router-dom';
 import { ShieldAlert, ArrowLeft, LayoutDashboard, Lock } from 'lucide-react';
 import { useWallet } from '../../context/WalletContext';
+import { useAuth } from '../../context/AuthContext';
 import {
   AppModule,
   getActiveRole,
@@ -21,8 +22,9 @@ export const RoleGuard: React.FC<RoleGuardProps> = ({
   children,
   fallback,
 }) => {
+  const { user } = useAuth();
   const { role: walletRole } = useWallet();
-  const currentRole = getActiveRole(walletRole);
+  const currentRole = user?.role ? user.role.toLowerCase() : getActiveRole(walletRole);
   const isAllowed = hasModulePermission(module, currentRole);
 
   if (isAllowed) {

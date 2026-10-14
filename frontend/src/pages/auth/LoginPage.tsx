@@ -67,7 +67,7 @@ export function LoginPage() {
   const [error, setError] = useState('');
 
   const successMessage = (
-    location.state as { message?: string } | null
+    location.state as { message?: string; from?: { pathname: string; search?: string } } | null
   )?.message;
 
   const handleSubmit = async (e: FormEvent<HTMLFormElement>) => {
@@ -81,7 +81,8 @@ export function LoginPage() {
         password,
       });
 
-      navigate('/dashboard', { replace: true });
+      const destination = (location.state as any)?.from?.pathname || '/dashboard';
+      navigate(destination, { replace: true });
     } catch (err) {
       setError(
         err instanceof Error

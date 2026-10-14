@@ -1,8 +1,11 @@
 import React from 'react';
 import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom';
 import { ToastProvider } from './context/ToastContext';
+import { AuthProvider } from './context/AuthContext';
 import { WalletProvider } from './context/WalletContext';
 import { AppLayout } from './components/layout/AppLayout';
+import { AuthGuard } from './components/auth/AuthGuard';
+import { PublicOnlyRoute } from './components/auth/PublicOnlyRoute';
 import { RoleGuard } from './components/auth/RoleGuard';
 
 // Pages
@@ -32,20 +35,45 @@ import { SignupPage } from './pages/auth/SignupPage';
 export function App() {
   return (
     <ToastProvider>
-      <WalletProvider>
-        <BrowserRouter>
-          <Routes>
-            <Route path="/" element={<LandingPage />} />
-            <Route path="/login" element={<LoginPage />} />
-            <Route path="/signup" element={<SignupPage />} />
-            <Route element={<AppLayout />}>
-              {/* Marketing & Public */}
+      <AuthProvider>
+        <WalletProvider>
+          <BrowserRouter>
+            <Routes>
+              {/* Public Marketing Routes */}
+              <Route path="/" element={<LandingPage />} />
               <Route path="/about" element={<AboutPage />} />
               <Route path="/features" element={<FeaturesPage />} />
-              <Route path="/connect-wallet" element={<Navigate to="/dashboard" replace />} />
 
-              {/* Workspace Dashboard */}
-              <Route path="/dashboard" element={<DashboardPage />} />
+              {/* Guest Only Routes (Redirects to /dashboard if logged in) */}
+              <Route
+                path="/login"
+                element={
+                  <PublicOnlyRoute>
+                    <LoginPage />
+                  </PublicOnlyRoute>
+                }
+              />
+              <Route
+                path="/signup"
+                element={
+                  <PublicOnlyRoute>
+                    <SignupPage />
+                  </PublicOnlyRoute>
+                }
+              />
+
+              {/* Authenticated Workspace Shell */}
+              <Route
+                element={
+                  <AuthGuard>
+                    <AppLayout />
+                  </AuthGuard>
+                }
+              >
+                <Route path="/connect-wallet" element={<Navigate to="/dashboard" replace />} />
+
+                {/* Workspace Dashboard */}
+                <Route path="/dashboard" element={<DashboardPage />} />
 
               {/* Property Ledger & Management */}
               <Route path="/properties" element={<PropertiesListPage />} />
@@ -226,7 +254,8 @@ export function App() {
             </Route>
           </Routes>
         </BrowserRouter>
-      </WalletProvider>
+        </WalletProvider>
+      </AuthProvider>
     </ToastProvider>
   );
 }

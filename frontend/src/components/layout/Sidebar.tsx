@@ -15,14 +15,16 @@ import {
   FileSearch,
 } from 'lucide-react';
 import { useWallet } from '../../context/WalletContext';
+import { useAuth } from '../../context/AuthContext';
 import { getActiveRole, hasModulePermission } from '../../utils/permissions';
 
 export const Sidebar: React.FC<{ className?: string; onCloseMobile?: () => void }> = ({
   className = '',
   onCloseMobile,
 }) => {
+  const { user } = useAuth();
   const { role: walletRole } = useWallet();
-  const currentRole = getActiveRole(walletRole);
+  const currentRole = user?.role ? user.role.toLowerCase() : getActiveRole(walletRole);
 
   const canOwner = hasModulePermission('owner', currentRole);
   const canBuyer = hasModulePermission('buyer', currentRole);

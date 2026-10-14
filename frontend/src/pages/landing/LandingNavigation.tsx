@@ -6,6 +6,7 @@ import {
   Shield,
   LogOut,
 } from 'lucide-react';
+import { useAuth } from '../../context/AuthContext';
 import { useWallet } from '../../context/WalletContext';
 import { NetworkBadge } from '../../components/wallet/NetworkBadge';
 import { WalletButton } from '../../components/wallet/WalletButton';
@@ -17,24 +18,13 @@ export const LandingNavigation: React.FC = () => {
 
   const location = useLocation();
   const navigate = useNavigate();
+  const { user, isAuthenticated, logout } = useAuth();
   const { role: walletRole } = useWallet();
-  const currentRole = getActiveRole(walletRole);
+  const currentRole = user?.role ? user.role.toLowerCase() : getActiveRole(walletRole);
 
-  const [isAuthenticated, setIsAuthenticated] = useState<boolean>(() => {
-    return Boolean(localStorage.getItem('token') || localStorage.getItem('user'));
-  });
-
-  const handleLogout = async () => {
-    try {
-      localStorage.clear();
-    } catch (err) {
-      console.warn('SignOut error:', err);
-    } finally {
-      localStorage.removeItem('token');
-      localStorage.removeItem('user');
-      setIsAuthenticated(false);
-      navigate('/login', { replace: true });
-    }
+  const handleLogout = () => {
+    logout();
+    navigate('/login', { replace: true });
   };
 
   const canBuyer = hasModulePermission('buyer', currentRole);

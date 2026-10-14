@@ -7,6 +7,7 @@ import {
   LogOut,
 } from 'lucide-react';
 import { useWallet } from '../../context/WalletContext';
+import { useAuth } from '../../context/AuthContext';
 import { NetworkBadge } from '../../components/wallet/NetworkBadge';
 import { WalletButton } from '../../components/wallet/WalletButton';
 
@@ -14,24 +15,12 @@ export const Header: React.FC = () => {
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
 
   const location = useLocation();
-  const { role } = useWallet();
   const navigate = useNavigate();
+  const { isAuthenticated, logout } = useAuth();
 
-  const [isAuthenticated, setIsAuthenticated] = useState<boolean>(() => {
-    return Boolean(localStorage.getItem('token') || localStorage.getItem('user'));
-  });
-
-  const handleLogout = async () => {
-    try {
-      localStorage.clear();
-    } catch (err) {
-      console.warn('SignOut error:', err);
-    } finally {
-      localStorage.removeItem('token');
-      localStorage.removeItem('user');
-      setIsAuthenticated(false);
-      navigate('/login', { replace: true });
-    }
+  const handleLogout = () => {
+    logout();
+    navigate('/login', { replace: true });
   };
 
 
