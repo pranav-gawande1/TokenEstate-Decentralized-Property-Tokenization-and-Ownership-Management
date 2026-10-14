@@ -22,6 +22,7 @@ import {
   RefreshCw,
   AlertCircle,
 } from 'lucide-react';
+import { authService } from '../../services/authService';
 
 export const DashboardPage: React.FC = () => {
   const { wallet, role, currentRoleInfo } = useWallet();
@@ -35,6 +36,23 @@ export const DashboardPage: React.FC = () => {
   const [transfers, setTransfers] = useState<TransferRequest[]>([]);
   const [recentAudits, setRecentAudits] = useState<AuditEvent[]>([]);
   const [isInitialLoading, setIsInitialLoading] = useState(true);
+  const [currentUser, setCurrentUser] = useState(() => authService.getUser());
+
+  useEffect(() => {
+    const handleAuthChange = () => {
+      setCurrentUser(authService.getUser());
+    };
+
+    window.addEventListener('auth-change', handleAuthChange);
+    window.addEventListener('storage', handleAuthChange);
+
+    return () => {
+      window.removeEventListener('auth-change', handleAuthChange);
+      window.removeEventListener('storage', handleAuthChange);
+    };
+  }, []);
+
+  const displayName = currentUser?.full_name || currentUser?.username || currentRoleInfo.name;
 
   const load = async () => {
     try {
@@ -91,13 +109,15 @@ export const DashboardPage: React.FC = () => {
               Polygon Amoy State Machine Active
             </div>
             <h1 className="text-2xl sm:text-3xl font-extrabold text-white tracking-tight">
-              Welcome, {currentRoleInfo.name}
+              Welcome, {displayName}
             </h1>
             <p className="text-xs text-slate-300 flex items-center gap-2">
               <span>
                 Authority:{' '}
                 <strong className="text-white font-medium">
-                  {currentRoleInfo.label}
+                  {currentUser?.role
+                    ? currentUser.role.charAt(0).toUpperCase() + currentUser.role.slice(1)
+                    : currentRoleInfo.label}
                 </strong>
               </span>
               <span className="text-slate-600">·</span>
