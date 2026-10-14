@@ -13,6 +13,7 @@ from ..models.models import (
     UserResponse,
     TokenResponse,
     RoleUpdate,
+    UserProfileUpdate,
 )
 from ..services.dependencies import get_current_user, require_roles
 
@@ -114,6 +115,23 @@ async def login_user(payload: UserLogin, db: AsyncSession = Depends(get_db)):
 @auth_router.get("/me", response_model=UserResponse)
 async def get_my_profile(current_user: User = Depends(get_current_user)):
     """Fetch current authenticated user profile from DB using Bearer JWT."""
+    return current_user.to_response()
+
+
+@auth_router.patch("/profile", response_model=UserResponse)
+async def update_my_profile(
+    body: UserProfileUpdate,
+    current_user: User = Depends(get_current_user),
+    db: AsyncSession = Depends(get_db),
+):
+    """Update current user's profile information (full_name, wallet_address) in PostgreSQL."""
+    if body.full_name is not None:
+        current_user.full_name = body.full_name.strip()
+    if body.wallet_address is not None:
+        current_user.wallet_address = body.wallet_address.strip()
+
+    await db.commit()
+    await db.refresh(current_user)
     return current_user.to_response()
 
 

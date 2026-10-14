@@ -65,6 +65,19 @@ class AuthService {
     });
   }
 
+  public async updateProfile(payload: { full_name?: string; wallet_address?: string }): Promise<UserResponse> {
+    const token = this.getToken();
+    const updated = await apiRequest<UserResponse, typeof payload>({
+      endpoint: '/api/v1/auth/profile',
+      method: 'PATCH',
+      body: payload,
+      headers: token ? { Authorization: `Bearer ${token}` } : {},
+    });
+    localStorage.setItem(this.USER_KEY, JSON.stringify(updated));
+    window.dispatchEvent(new Event('auth-change'));
+    return updated;
+  }
+
   public saveSession(token: string, user: UserResponse): void {
     localStorage.setItem(this.TOKEN_KEY, token);
     localStorage.setItem(this.USER_KEY, JSON.stringify(user));

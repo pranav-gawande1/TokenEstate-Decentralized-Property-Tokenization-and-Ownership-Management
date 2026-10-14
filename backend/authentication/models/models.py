@@ -44,6 +44,10 @@ class RoleUpdate(BaseModel):
     role: Role
 
 
+class UserProfileUpdate(BaseModel):
+    full_name: Optional[str] = None
+    wallet_address: Optional[str] = None
+
 class User(Base):
     __tablename__ = "users"
 
