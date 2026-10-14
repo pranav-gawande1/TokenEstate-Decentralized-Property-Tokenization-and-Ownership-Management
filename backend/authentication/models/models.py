@@ -3,7 +3,7 @@ import os
 from typing import Optional, Dict, Any, List
 from pydantic import BaseModel, EmailStr
 from .roles import Role
-from .jwt_handler import hash_password
+from ..services.jwt_handler import hash_password
 
 class UserCreate(BaseModel):
     username: str

@@ -5,13 +5,13 @@ from fastapi.middleware.cors import CORSMiddleware
 
 from database import Base, engine
 
-from authentication.models import User  # noqa: F401
+from authentication.models.models import User  # noqa: F401
 from propertyRegistration.models.property import Property  # noqa: F401
 
 from documentVerification.routers.verification_router import (
     router as document_router,
 )
-from authentication.router import auth_router, user_router
+from authentication.router.router import auth_router, user_router
 from propertyRegistration.api.routers.properties import router as property_router
 
 

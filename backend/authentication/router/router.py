@@ -1,8 +1,8 @@
 from fastapi import APIRouter, Depends, HTTPException, status
 from typing import List, Dict, Any
-from .roles import Role, get_available_roles
-from .jwt_handler import create_access_token, verify_password
-from .models import (
+from ..models.roles import Role, get_available_roles
+from ..services.jwt_handler import create_access_token, verify_password
+from ..models.models import (
     UserCreate,
     UserLogin,
     UserResponse,
@@ -10,7 +10,7 @@ from .models import (
     RoleUpdate,
     db,
 )
-from .dependencies import get_current_user, require_roles
+from ..services.dependencies import get_current_user, require_roles
 
 auth_router = APIRouter(prefix="/auth", tags=["Authentication & Roles"])
 user_router = APIRouter(prefix="/users", tags=["User Role Management"])

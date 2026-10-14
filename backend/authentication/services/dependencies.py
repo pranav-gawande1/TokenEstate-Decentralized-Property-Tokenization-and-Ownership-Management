@@ -1,9 +1,9 @@
 
 from fastapi import Depends, HTTPException, status
 from fastapi.security import HTTPBearer, HTTPAuthorizationCredentials
-from .roles import Role
+from ..models.roles import Role
 from .jwt_handler import decode_access_token
-from .models import db, User
+from ..models.models import db, User
 
 
 security = HTTPBearer()
