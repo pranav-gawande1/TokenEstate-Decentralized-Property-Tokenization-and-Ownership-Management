@@ -36,10 +36,20 @@ async def register_property(
 async def list_properties(
     page: int = Query(1, ge=1),
     page_size: int = Query(20, ge=1, le=100),
+    mine: bool = Query(False, description="Filter only properties owned by current user"),
+    status: str | None = Query(None, description="Filter by registration or blockchain status"),
+    search: str | None = Query(None, description="Search term for title, survey_number, city"),
     user: AuthenticatedUser = Depends(get_current_user),
     service: PropertyService = Depends(get_property_service),
 ):
-    items, total = await service.list_properties(user, page, page_size)
+    items, total = await service.list_properties(
+        user=user,
+        page=page,
+        page_size=page_size,
+        mine=mine,
+        status=status,
+        search=search,
+    )
     return PaginatedProperties(items=items, page=page, page_size=page_size, total=total)
 
 

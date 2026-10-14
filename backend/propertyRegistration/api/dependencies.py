@@ -24,19 +24,22 @@ async def get_current_user(request: Request) -> AuthenticatedUser:
     """
     settings = get_settings()
     auth_header = request.headers.get("Authorization")
+    client_wallet = request.headers.get("X-Wallet-Address")
+
     if auth_header and auth_header.startswith("Bearer "):
         token = auth_header.split(" ", 1)[1].strip()
         payload = decode_access_token(token)
         if payload:
+            token_wallet = payload.get("wallet_address") or client_wallet or settings.demo_wallet_address
             return AuthenticatedUser(
                 user_id=str(payload.get("user_id", settings.demo_user_id)),
-                wallet_address=settings.demo_wallet_address,
+                wallet_address=token_wallet,
                 role=str(payload.get("role", settings.demo_user_role)).lower(),
             )
 
     return AuthenticatedUser(
         user_id=settings.demo_user_id,
-        wallet_address=settings.demo_wallet_address,
+        wallet_address=client_wallet or settings.demo_wallet_address,
         role=settings.demo_user_role.lower(),
     )
 

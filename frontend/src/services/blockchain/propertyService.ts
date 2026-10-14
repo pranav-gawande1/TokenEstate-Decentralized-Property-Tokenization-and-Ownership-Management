@@ -21,9 +21,13 @@ export type RegisterPropertyData = Omit<
 >;
 
 // ---------------------------------------------------------
-// Shared Property State Store & Pub/Sub
+// Shared Property State Store & Pub/Sub with Smart TTL Cache
 // ---------------------------------------------------------
 let sharedProperties: Property[] = [];
+let lastPropertiesFetchTime = 0;
+let inFlightPropertiesPromise: Promise<Property[]> | null = null;
+export const PROPERTIES_CACHE_TTL_MS = 60 * 1000; // 60 seconds
+
 const listeners = new Set<() => void>();
 
 export const subscribeProperties = (callback: () => void): (() => void) => {
@@ -37,10 +41,15 @@ const notifyProperties = (): void => {
   listeners.forEach((listener) => listener());
 };
 
+export const invalidatePropertiesCache = (): void => {
+  lastPropertiesFetchTime = 0;
+};
+
 const updatePropertiesStore = (
   updater: (prev: Property[]) => Property[],
 ): Property[] => {
   sharedProperties = updater(sharedProperties);
+  lastPropertiesFetchTime = Date.now();
   notifyProperties();
   return sharedProperties;
 };
@@ -197,12 +206,34 @@ export function usePropertyService() {
     return unsubscribe;
   }, []);
 
-  const getAllProperties = useCallback(async (): Promise<Property[]> => {
-    const response = await execute(PROPERTY_ENDPOINT, 'GET');
-    const mapped = extractList(response).map(mapProperty);
-    updatePropertiesStore(() => mapped);
-    return mapped;
-  }, [execute]);
+  const getAllProperties = useCallback(
+    async (forceRefresh = false): Promise<Property[]> => {
+      const isCacheFresh =
+        Date.now() - lastPropertiesFetchTime < PROPERTIES_CACHE_TTL_MS;
+
+      if (!forceRefresh && sharedProperties.length > 0 && isCacheFresh) {
+        return [...sharedProperties];
+      }
+
+      if (inFlightPropertiesPromise) {
+        return inFlightPropertiesPromise;
+      }
+
+      inFlightPropertiesPromise = (async () => {
+        try {
+          const response = await execute(PROPERTY_ENDPOINT, 'GET');
+          const mapped = extractList(response).map(mapProperty);
+          updatePropertiesStore(() => mapped);
+          return mapped;
+        } finally {
+          inFlightPropertiesPromise = null;
+        }
+      })();
+
+      return inFlightPropertiesPromise;
+    },
+    [execute],
+  );
 
   const getPropertyById = useCallback(
     async (id: string): Promise<Property | null> => {
@@ -341,7 +372,7 @@ export function usePropertyService() {
         },
       );
 
-      await getAllProperties();
+      await getAllProperties(true);
 
       return {
         success: response?.success ?? true,
@@ -366,7 +397,7 @@ export function usePropertyService() {
         },
       );
 
-      await getAllProperties();
+      await getAllProperties(true);
 
       return {
         success: response?.success ?? true,
@@ -390,7 +421,7 @@ export function usePropertyService() {
         },
       );
 
-      await getAllProperties();
+      await getAllProperties(true);
     },
     [execute, getAllProperties],
   );
@@ -412,7 +443,7 @@ export function usePropertyService() {
         },
       );
 
-      await getAllProperties();
+      await getAllProperties(true);
 
       const tokenId = String(
         response?.token_id ?? response?.tokenId ?? '',
@@ -454,7 +485,7 @@ export function usePropertyService() {
         },
       );
 
-      await getAllProperties();
+      await getAllProperties(true);
     },
     [execute, getAllProperties],
   );
@@ -493,6 +524,7 @@ export function usePropertyService() {
     execute,
     executeBlob,
     subscribe: subscribeProperties,
+    invalidateCache: invalidatePropertiesCache,
     mapProperty,
     extractList,
     extractProperty,
@@ -531,16 +563,34 @@ export class PropertyService {
     return mapProperty(value);
   }
 
-  public async getAllProperties(): Promise<Property[]> {
-    const response = await apiRequest<any>({
-      endpoint: PROPERTY_ENDPOINT,
-      method: 'GET',
-    });
+  public async getAllProperties(forceRefresh = false): Promise<Property[]> {
+    const isCacheFresh =
+      Date.now() - lastPropertiesFetchTime < PROPERTIES_CACHE_TTL_MS;
 
-    const mapped = extractList(response).map(mapProperty);
-    updatePropertiesStore(() => mapped);
+    if (!forceRefresh && sharedProperties.length > 0 && isCacheFresh) {
+      return [...sharedProperties];
+    }
 
-    return [...sharedProperties];
+    if (inFlightPropertiesPromise) {
+      return inFlightPropertiesPromise;
+    }
+
+    inFlightPropertiesPromise = (async () => {
+      try {
+        const response = await apiRequest<any>({
+          endpoint: PROPERTY_ENDPOINT,
+          method: 'GET',
+        });
+
+        const mapped = extractList(response).map(mapProperty);
+        updatePropertiesStore(() => mapped);
+        return [...sharedProperties];
+      } finally {
+        inFlightPropertiesPromise = null;
+      }
+    })();
+
+    return inFlightPropertiesPromise;
   }
 
   public async getPropertyById(

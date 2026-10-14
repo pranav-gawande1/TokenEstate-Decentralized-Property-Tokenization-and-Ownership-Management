@@ -34,9 +34,9 @@ export const PropertiesListPage: React.FC = () => {
   const [searchTerm, setSearchTerm] = useState('');
   const [viewMode, setViewMode] = useState<'grid' | 'table'>('grid');
 
-  const load = async () => {
+  const load = async (force = false) => {
     try {
-      const data = await getAllProperties();
+      const data = await getAllProperties(force);
       setProperties(data);
     } catch (err) {
       console.error('[PropertiesListPage] Failed to load:', err);
@@ -45,7 +45,9 @@ export const PropertiesListPage: React.FC = () => {
 
   useEffect(() => {
     load();
-    const unsubscribe = subscribe(load);
+    const unsubscribe = subscribe(() => {
+      load(false);
+    });
     return () => {
       unsubscribe();
     };
@@ -199,7 +201,7 @@ export const PropertiesListPage: React.FC = () => {
           <Button
             variant="outline"
             size="sm"
-            onClick={load}
+            onClick={() => load(true)}
             isLoading={isPropertiesLoading}
             disabled={isPropertiesLoading}
             className="bg-slate-900/80 hover:bg-slate-800 text-slate-200 border-slate-700"
@@ -235,7 +237,7 @@ export const PropertiesListPage: React.FC = () => {
           <Button
             variant="outline"
             size="sm"
-            onClick={load}
+            onClick={() => load(true)}
             disabled={isPropertiesLoading}
             className="bg-white text-red-700 border-red-300 hover:bg-red-50"
           >

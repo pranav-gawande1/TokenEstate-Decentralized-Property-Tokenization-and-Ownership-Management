@@ -63,9 +63,9 @@ export const DashboardPage: React.FC = () => {
 
   const displayName = currentUser?.full_name || currentUser?.username || currentRoleInfo.name;
 
-  const load = async () => {
+  const load = async (force = false) => {
     try {
-      const allProps = await getAllProperties();
+      const allProps = await getAllProperties(force);
       setProperties(allProps);
       setTransfers(transferService.getAllTransfers());
       setRecentAudits(auditService.getAllEvents().slice(0, 5));
@@ -78,8 +78,12 @@ export const DashboardPage: React.FC = () => {
 
   useEffect(() => {
     load();
-    const unsubTrans = transferService.subscribe(load);
-    const unsubAudit = auditService.subscribe(load);
+    const unsubTrans = transferService.subscribe(() => {
+      load(false);
+    });
+    const unsubAudit = auditService.subscribe(() => {
+      load(false);
+    });
 
     return () => {
       unsubTrans();
@@ -140,7 +144,7 @@ export const DashboardPage: React.FC = () => {
             <Button
               variant="outline"
               size="sm"
-              onClick={load}
+              onClick={() => load(true)}
               isLoading={isPropertiesLoading}
               disabled={isPropertiesLoading}
               className="bg-slate-900/80 hover:bg-slate-800 text-slate-200 border-slate-700"
@@ -217,7 +221,7 @@ export const DashboardPage: React.FC = () => {
           <Button
             variant="outline"
             size="sm"
-            onClick={load}
+            onClick={() => load(true)}
             disabled={isPropertiesLoading}
             className="bg-white text-red-700 border-red-300 hover:bg-red-50"
           >

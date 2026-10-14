@@ -117,14 +117,29 @@ class PropertyService:
         await self.db.refresh(record)
         return record
 
-    async def get_property(self, record_id: UUID, user) -> Property:
+    async def get_property(self, record_id: UUID, user=None) -> Property:
         record = await self.repository.get_by_id(record_id)
-        if not record or record.owner_user_id != user.user_id:
+        if not record:
             raise PropertyNotFoundError("Property not found")
         return record
 
-    async def list_properties(self, user, page: int, page_size: int):
-        return await self.repository.list_by_user(user.user_id, page, page_size)
+    async def list_properties(
+        self,
+        user,
+        page: int = 1,
+        page_size: int = 20,
+        mine: bool = False,
+        status: str | None = None,
+        search: str | None = None,
+    ):
+        owner_id = user.user_id if mine else None
+        return await self.repository.list_properties(
+            page=page,
+            page_size=page_size,
+            owner_user_id=owner_id,
+            status=status,
+            search=search,
+        )
 
     async def get_blockchain_details(self, record_id: UUID, user):
         record = await self.get_property(record_id, user)

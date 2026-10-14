@@ -66,6 +66,7 @@ async def register_user(payload: UserCreate, db: AsyncSession = Depends(get_db))
         "sub": user.email,
         "user_id": user.id,
         "role": user.role,
+        "wallet_address": user.wallet_address or "",
     })
 
     return TokenResponse(
@@ -103,6 +104,7 @@ async def login_user(payload: UserLogin, db: AsyncSession = Depends(get_db)):
         "sub": user.email,
         "user_id": user.id,
         "role": user.role,
+        "wallet_address": user.wallet_address or "",
     })
 
     return TokenResponse(
