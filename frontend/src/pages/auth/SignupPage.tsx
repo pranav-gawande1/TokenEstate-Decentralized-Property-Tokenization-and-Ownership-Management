@@ -135,15 +135,21 @@ export function SignupPage() {
       <header className="relative z-20 w-full border-b border-slate-800/80 bg-slate-950/40 backdrop-blur-md">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-16 flex items-center justify-between">
           <Link to="/" className="flex items-center gap-3 group">
-            <div className="w-9 h-9 rounded-xl bg-gradient-to-br from-blue-500 via-indigo-500 to-purple-600 flex items-center justify-center shadow-lg shadow-blue-500/25 transition-transform group-hover:scale-105">
-              <Shield className="w-5 h-5 text-white" />
+            <div className="w-9 h-9 rounded-xl bg-gradient-to-tr from-blue-600 via-indigo-500 to-cyan-400 p-[1.5px] shadow-lg shadow-blue-500/20 group-hover:shadow-blue-500/40 transition-all">
+              <div className="w-full h-full bg-[#070D1F] rounded-[10px] flex items-center justify-center">
+                <Shield className="w-4 h-4 text-cyan-400 group-hover:scale-110 transition-transform" />
+              </div>
             </div>
-            <span className="text-xl font-black tracking-tight text-white group-hover:text-blue-400 transition-colors">
-              Cadastra
-            </span>
-            <span className="hidden sm:inline-flex text-[10px] uppercase font-mono font-bold tracking-widest text-blue-400 bg-blue-950/80 border border-blue-800/60 px-2 py-0.5 rounded-md">
-              WEB3
-            </span>
+            <div className="flex flex-col">
+              <div className="flex items-center gap-1.5">
+                <span className="text-base font-black tracking-tight bg-gradient-to-r from-white via-slate-100 to-slate-300 bg-clip-text text-transparent group-hover:from-blue-400 group-hover:to-cyan-300 transition-all">
+                  Tokenize<span className="text-blue-500">Estate</span>
+                </span>
+                <span className="text-[9px] uppercase font-mono font-extrabold tracking-widest text-cyan-300 bg-cyan-950/80 border border-cyan-700/60 px-1.5 py-0.2 rounded shadow-xs">
+                  WEB3
+                </span>
+              </div>
+            </div>
           </Link>
 
           <div className="flex items-center gap-4">

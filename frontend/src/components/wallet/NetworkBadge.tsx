@@ -7,13 +7,16 @@ export const NetworkBadge: React.FC<{ className?: string }> = ({ className = '' 
   const isPolygon = wallet.network === 'polygon-amoy';
 
   return (
-    <div className={`inline-flex items-center gap-1.5 px-2.5 py-1 rounded-md text-xs font-medium border ${
+    <div className={`inline-flex items-center gap-2 px-3 py-1.5 rounded-lg text-xs font-medium border transition-all ${
       isPolygon 
-        ? 'bg-purple-950/70 text-purple-200 border-purple-800/60 shadow-xs' 
+        ? 'bg-gradient-to-r from-purple-950/80 to-indigo-950/80 text-purple-200 border-purple-500/40 shadow-[0_0_12px_rgba(168,85,247,0.15)]' 
         : 'bg-amber-950/80 text-amber-200 border-amber-800/80'
     } ${className}`}>
-      <span className={`w-2 h-2 rounded-full ${isPolygon ? 'bg-purple-400' : 'bg-amber-400'} shrink-0 animate-pulse`} />
-      <span className="font-semibold font-mono whitespace-nowrap">
+      <span className="relative flex h-2 w-2">
+        <span className={`animate-ping absolute inline-flex h-full w-full rounded-full opacity-75 ${isPolygon ? 'bg-purple-400' : 'bg-amber-400'}`} />
+        <span className={`relative inline-flex rounded-full h-2 w-2 ${isPolygon ? 'bg-purple-400' : 'bg-amber-400'}`} />
+      </span>
+      <span className="font-semibold font-mono text-[11px] tracking-wide whitespace-nowrap">
         {isPolygon ? 'Polygon Amoy' : 'Wrong Network'}
       </span>
       {!isPolygon && (

@@ -23,12 +23,15 @@ export const WalletButton: React.FC<{ className?: string }> = ({ className = '' 
   return (
     <button
       onClick={openWalletModal}
-      className={`inline-flex items-center gap-2 px-3 py-1.5 text-xs font-medium rounded-lg border border-slate-700/80 bg-slate-900/90 hover:bg-slate-800 text-white transition-colors cursor-pointer shadow-xs ${className}`}
+      className={`inline-flex items-center gap-2.5 px-3 py-1.5 text-xs font-medium rounded-lg border border-slate-700/80 bg-gradient-to-b from-slate-800/90 to-slate-900/90 hover:from-slate-750 hover:to-slate-850 hover:border-slate-600 text-white transition-all duration-200 cursor-pointer shadow-md hover:shadow-lg active:scale-[0.98] ${className}`}
     >
-      <div className="w-2 h-2 rounded-full bg-emerald-400 shrink-0 shadow-[0_0_8px_rgba(52,211,153,0.8)]" />
-      <span className="font-mono tabular-nums font-semibold text-slate-100">{truncated}</span>
-      <span className="hidden sm:inline-block text-slate-500 font-sans">|</span>
-      <span className="hidden sm:inline-block text-slate-300 font-sans text-[11px] font-medium">
+      <div className="relative flex h-2 w-2">
+        <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75" />
+        <span className="relative inline-flex rounded-full h-2 w-2 bg-emerald-400 shadow-[0_0_8px_rgba(52,211,153,0.9)]" />
+      </div>
+      <span className="font-mono tabular-nums font-semibold tracking-tight text-slate-100">{truncated}</span>
+      <span className="hidden sm:inline-block text-slate-600 font-sans">|</span>
+      <span className="hidden sm:inline-flex items-center px-1.5 py-0.5 rounded bg-blue-950/60 border border-blue-800/50 text-blue-300 font-sans text-[10px] font-semibold tracking-wide uppercase">
         {DEMO_WALLETS[role].role === 'officer'
           ? 'Registrar'
           : DEMO_WALLETS[role].role === 'auditor'
@@ -37,7 +40,7 @@ export const WalletButton: React.FC<{ className?: string }> = ({ className = '' 
           ? 'Buyer'
           : 'Owner'}
       </span>
-      <ChevronDown className="w-3.5 h-3.5 text-slate-400" />
+      <ChevronDown className="w-3.5 h-3.5 text-slate-400 transition-transform group-hover:translate-y-0.5" />
     </button>
   );
 };

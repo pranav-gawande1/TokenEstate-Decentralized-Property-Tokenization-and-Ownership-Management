@@ -9,12 +9,14 @@ export const Footer: React.FC = () => {
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-10">
         <div className="grid grid-cols-2 md:grid-cols-5 gap-8 mb-8">
           <div className="col-span-2 space-y-3">
-            <div className="flex items-center gap-2">
-              <div className="w-6 h-6 rounded bg-gradient-to-br from-blue-500 to-indigo-600 flex items-center justify-center text-white">
-                <Shield className="w-3.5 h-3.5" />
+            <div className="flex items-center gap-3">
+              <div className="w-8 h-8 rounded-lg bg-gradient-to-tr from-blue-600 via-indigo-500 to-cyan-400 p-[1.5px] shadow-md shadow-blue-500/20">
+                <div className="w-full h-full bg-[#0B132B] rounded-[7px] flex items-center justify-center">
+                  <Shield className="w-4 h-4 text-cyan-400" />
+                </div>
               </div>
-              <span className="text-base font-bold text-white tracking-tight">
-                Cadastra
+              <span className="text-base font-black tracking-tight text-white">
+                Tokenize<span className="text-blue-500">Estate</span>
               </span>
             </div>
             <p className="text-slate-400 max-w-sm text-xs leading-relaxed">

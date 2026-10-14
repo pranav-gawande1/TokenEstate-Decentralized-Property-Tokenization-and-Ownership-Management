@@ -59,19 +59,27 @@ export const LandingNavigation: React.FC = () => {
 
         <Link
           to="/"
-          className="flex items-center gap-2 shrink-0 group"
+          className="flex items-center gap-3 shrink-0 group"
         >
-          <div className="w-8 h-8 rounded-lg bg-gradient-to-br from-blue-500 to-indigo-700 flex items-center justify-center shadow-sm transition-transform group-hover:scale-105">
-            <Shield className="w-4 h-4 text-white" />
+          <div className="w-9 h-9 rounded-xl bg-gradient-to-tr from-blue-600 via-indigo-500 to-cyan-400 p-[1.5px] shadow-lg shadow-blue-500/20 group-hover:shadow-blue-500/40 transition-all">
+            <div className="w-full h-full bg-[#0B132B] rounded-[10px] flex items-center justify-center">
+              <Shield className="w-4 h-4 text-cyan-400 group-hover:scale-110 transition-transform" />
+            </div>
           </div>
 
-          <span className="text-lg font-extrabold tracking-tight">
-            Cadastra
-          </span>
-
-          <span className="hidden sm:inline-flex text-[10px] uppercase font-mono font-bold tracking-widest text-blue-400 bg-blue-950/80 border border-blue-800/60 px-1.5 py-0.5 rounded">
-            WEB3
-          </span>
+          <div className="flex flex-col">
+            <div className="flex items-center gap-1.5">
+              <span className="text-base font-black tracking-tight bg-gradient-to-r from-white via-slate-100 to-slate-300 bg-clip-text text-transparent group-hover:from-blue-400 group-hover:to-cyan-300 transition-all">
+                Tokenize<span className="text-blue-500">Estate</span>
+              </span>
+              <span className="text-[9px] uppercase font-mono font-extrabold tracking-widest text-cyan-300 bg-cyan-950/80 border border-cyan-700/60 px-1.5 py-0.2 rounded shadow-xs">
+                WEB3
+              </span>
+            </div>
+            <span className="text-[10px] text-slate-400 font-medium tracking-wide -mt-0.5 hidden sm:block">
+              Decentralized Land & Asset Registry
+            </span>
+          </div>
         </Link>
 
         <nav className="hidden lg:flex items-center gap-1 ml-6 flex-1">
@@ -112,11 +120,14 @@ export const LandingNavigation: React.FC = () => {
 
         <div className="ml-auto flex items-center gap-2 sm:gap-3 shrink-0">
 
+          {/* Polygon Amoy Badge in Landing Navbar */}
+          <div className="hidden sm:flex">
+            <NetworkBadge />
+          </div>
+
           {isAuthenticated ? (
             <>
-              <div className="hidden sm:flex">
-                <NetworkBadge />
-              </div>
+              {/* Wallet identity button: e.g. 0x7A4F...92F1 | Owner */}
               <WalletButton />
               <button
                 type="button"
@@ -175,12 +186,10 @@ export const LandingNavigation: React.FC = () => {
       {mobileMenuOpen && (
         <div className="lg:hidden border-t border-slate-800 bg-[#0B132B] px-4 py-4">
 
-          {isAuthenticated && (
-            <div className="mb-4 flex flex-col gap-2">
-              <NetworkBadge />
-              <WalletButton />
-            </div>
-          )}
+          <div className="mb-4 flex flex-col gap-2">
+            <NetworkBadge />
+            {isAuthenticated && <WalletButton />}
+          </div>
 
           <nav className="space-y-1">
             {navLinks.map((link) => {
