@@ -171,7 +171,7 @@ export const WalletModal: React.FC = () => {
         <div className="pt-3 border-t border-slate-100 flex items-center justify-between text-xs text-slate-500">
           <span className="flex items-center gap-1">
             <Shield className="w-3.5 h-3.5 text-slate-400" />
-            Cadastra Smart Contract Suite
+            TokenizeEstate Smart Contract Suite
           </span>
           <a
             href={APP_CONFIG.network.explorerUrl}

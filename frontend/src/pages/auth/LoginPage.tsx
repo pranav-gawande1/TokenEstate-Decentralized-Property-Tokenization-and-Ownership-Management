@@ -359,7 +359,7 @@ export function LoginPage() {
                   ) : (
                     <>
                       <LogIn className="w-4 h-4" />
-                      <span>Log in to Cadastra</span>
+                      <span>Log in to TokenizeEstate</span>
                     </>
                   )}
                 </button>
@@ -383,7 +383,7 @@ export function LoginPage() {
 
       {/* Clean Footer */}
       <footer className="relative z-20 py-4 border-t border-slate-800/60 bg-slate-950/40 text-center text-xs text-slate-500">
-        © 2026 Cadastra Web3. Decentralized Cadastral & Land Registry Engine.
+        © 2026 TokenizeEstate Web3. Decentralized Land & Property Registry Engine.
       </footer>
     </div>
   );

@@ -30,7 +30,7 @@ class NFTService {
       name: `${property.title} - NFT #${property.tokenId || '1042'}`,
       description: `Official ERC-721 tokenized digital cadastral asset for ${property.address}, ${property.city}. Certified by Department of Land Resources.`,
       image: property.image,
-      external_url: `https://cadastra.gov.in/property/${property.id}`,
+      external_url: `https://tokenizeestate.io/property/${property.id}`,
       attributes: [
         { trait_type: 'Property ID', value: property.id },
         { trait_type: 'Survey Number', value: property.surveyNumber },

@@ -428,7 +428,7 @@ export function SignupPage() {
                   ) : (
                     <>
                       <UserPlus className="w-4 h-4" />
-                      <span>Create Cadastra Account</span>
+                      <span>Create TokenizeEstate Account</span>
                     </>
                   )}
                 </button>
@@ -452,7 +452,7 @@ export function SignupPage() {
 
       {/* Clean Footer */}
       <footer className="relative z-20 py-4 border-t border-slate-800/60 bg-slate-950/40 text-center text-xs text-slate-500">
-        © 2026 Cadastra Web3. Decentralized Cadastral & Land Registry Engine.
+        © 2026 TokenizeEstate Web3. Decentralized Cadastral & Land Registry Engine.
       </footer>
     </div>
   );

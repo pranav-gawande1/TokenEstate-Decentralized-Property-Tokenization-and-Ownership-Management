@@ -64,7 +64,7 @@ export const Footer: React.FC = () => {
             <strong className="text-slate-300">Statutory Notice:</strong> {APP_CONFIG.legalDisclaimer}
           </p>
           <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-2 pt-3 text-slate-500">
-            <span>© {new Date().getFullYear()} Cadastra Web3 Infrastructure Platform. All rights reserved.</span>
+            <span>© {new Date().getFullYear()} TokenizeEstate Web3 Infrastructure Platform. All rights reserved.</span>
             <div className="flex items-center gap-4">
               <span>IPFS Storage</span>
               <span>·</span>

@@ -1,5 +1,5 @@
 export const APP_CONFIG = {
-  appName: 'Cadastra Web3',
+  appName: 'TokenizeEstate Web3',
   tagline: 'Trust Every Property. Verify Every Record.',
   legalDisclaimer: 'Blockchain records provide a tamper-evident digital record of registered actions and ownership representations within the platform. Legal ownership of real-world property remains subject to applicable laws, government records, and authorized legal processes.',
   
@@ -58,7 +58,7 @@ export const DEMO_WALLETS = {
     label: 'System Administrator',
     role: 'admin' as const,
     name: 'Admin User',
-    department: 'Cadastra Central Authority',
+    department: 'TokenizeEstate Central Authority',
     balance: '100.00 MATIC',
   },
 };

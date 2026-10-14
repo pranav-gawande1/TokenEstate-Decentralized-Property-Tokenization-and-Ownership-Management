@@ -10,13 +10,13 @@ export const AboutPage: React.FC = () => {
     <div className="max-w-4xl mx-auto space-y-12 py-10 px-4 sm:px-6">
       <div className="space-y-4 text-center sm:text-left">
         <span className="text-xs font-semibold text-slate-500 uppercase tracking-wider">
-          About Cadastra
+          About TokenizeEstate
         </span>
         <h1 className="text-3xl sm:text-4xl font-extrabold text-slate-900 tracking-tight">
           Next-Generation Cadastral Infrastructure
         </h1>
         <p className="text-base text-slate-600 max-w-2xl leading-relaxed">
-          Cadastra provides an institutional bridge connecting sovereign municipal revenue land records with decentralized Ethereum/Polygon smart contracts.
+          TokenizeEstate provides an institutional bridge connecting sovereign municipal revenue land records with decentralized Ethereum/Polygon smart contracts.
         </p>
       </div>
 

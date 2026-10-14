@@ -102,7 +102,7 @@ export const TransferDetailsPage: React.FC = () => {
       <Card>
         <CardHeader
           title="Escrow Parameters & Statutory Parties"
-          subtitle="Governed by Cadastra EscrowManager multi-sig contract"
+          subtitle="Governed by TokenizeEstate EscrowManager multi-sig contract"
           action={
             transfer.txHash && (
               <ExplorerLink type="tx" value={transfer.txHash} label="View Escrow on PolygonScan" />
