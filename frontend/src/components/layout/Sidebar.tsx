@@ -32,48 +32,74 @@ export const Sidebar: React.FC<{ className?: string; onCloseMobile?: () => void 
   const canAudit = hasModulePermission('audit', currentRole);
   const canInstitutional = hasModulePermission('institutional', currentRole);
 
+  const isOfficer = currentRole === 'officer' || currentRole === 'registrar';
+  const isAdmin = currentRole === 'admin';
+  const isAuditor = currentRole === 'auditor';
+
+  const propertyLedgerLabel = isOfficer
+    ? 'State Land Ledger'
+    : currentRole === 'buyer'
+    ? 'Browse Properties'
+    : currentRole === 'owner'
+    ? 'My Properties'
+    : 'Property Ledger';
+
   const primaryItems = [
     { label: 'Overview', href: '/dashboard', icon: <LayoutDashboard className="w-4 h-4" /> },
-    { label: 'My Properties', href: '/properties', icon: <Building2 className="w-4 h-4" /> },
+    { label: propertyLedgerLabel, href: '/properties', icon: <Building2 className="w-4 h-4" /> },
     ...(canOwner
       ? [{ label: 'Register Property', href: '/properties/register', icon: <PlusCircle className="w-4 h-4" /> }]
+      : []),
+    ...(canOwner
+      ? [{ label: 'Tokenization (Mint NFT)', href: '/tokenization', icon: <Layers className="w-4 h-4" /> }]
       : []),
     ...(canBuyer
       ? [{ label: 'Marketplace', href: '/marketplace', icon: <ShoppingBag className="w-4 h-4" /> }]
       : []),
-    ...(canOwner
-      ? [{ label: 'Tokenization', href: '/tokenization', icon: <Layers className="w-4 h-4" /> }]
-      : []),
-    { label: 'Transfers & Escrow', href: '/transfers', icon: <ArrowRightLeft className="w-4 h-4" /> },
+    {
+      label: isOfficer ? 'Sanction Transfers & Escrow' : 'Transfers & Escrow',
+      href: '/transfers',
+      icon: <ArrowRightLeft className="w-4 h-4" />,
+    },
     { label: 'Cadastral Deeds', href: '/documents', icon: <FileCheck2 className="w-4 h-4" /> },
   ];
 
   const verificationItems = [
-    ...(canVerification
-      ? [{ label: 'Document Hash Check', href: '/verification/document', icon: <FileSearch className="w-4 h-4" /> }]
-      : []),
+    { label: 'Document Hash Check', href: '/verification/document', icon: <FileSearch className="w-4 h-4" /> },
     ...(canAudit
-      ? [{ label: 'Audit Trail', href: '/audit', icon: <History className="w-4 h-4" /> }]
+      ? [{ label: 'Immutable Audit Trail', href: '/audit', icon: <History className="w-4 h-4" /> }]
       : []),
   ];
 
   const institutionalItems = [
-    {
-      label: 'Registrar Review',
-      href: '/government/registrations',
-      icon: <ShieldCheck className="w-4 h-4" />,
-      badge: 'Gov',
-    },
-    {
-      label: 'Fraud & Conflict Check',
-      href: '/admin/fraud-detection',
-      icon: <AlertTriangle className="w-4 h-4" />,
-      badge: 'Audit',
-    },
+    ...(isOfficer || isAdmin
+      ? [
+          {
+            label: 'Government Review Desk',
+            href: '/government/registrations',
+            icon: <ShieldCheck className="w-4 h-4" />,
+            badge: 'Gov',
+          },
+        ]
+      : []),
+    ...(isAdmin
+      ? [
+          {
+            label: 'Fraud & Conflict Console',
+            href: '/admin/fraud-detection',
+            icon: <AlertTriangle className="w-4 h-4" />,
+            badge: 'Admin',
+          },
+        ]
+      : []),
   ];
 
   const settingsItems = [
-    { label: 'Platform Settings', href: '/settings/profile', icon: <Settings className="w-4 h-4" /> },
+    {
+      label: isOfficer ? 'Jurisdiction & Signer Config' : 'Platform Settings',
+      href: '/settings/profile',
+      icon: <Settings className="w-4 h-4" />,
+    },
   ];
 
   return (
@@ -137,7 +163,7 @@ export const Sidebar: React.FC<{ className?: string; onCloseMobile?: () => void 
         )}
 
         {/* Institutional & Registrar Portals (Hidden for Buyer & Owner) */}
-        {canInstitutional && (
+        {institutionalItems.length > 0 && (
           <div>
             <span className="text-[10px] font-bold text-slate-400 uppercase tracking-widest block px-3 mb-2">
               Institutional Portals
@@ -196,6 +222,35 @@ export const Sidebar: React.FC<{ className?: string; onCloseMobile?: () => void 
               </NavLink>
             ))}
           </nav>
+        </div>
+      </div>
+
+      {/* Active Persona Badge at Sidebar Footer */}
+      <div className="p-3.5 border-t border-slate-800/80 bg-slate-950/60">
+        <div className="flex items-center justify-between text-xs">
+          <div className="flex items-center gap-2">
+            <div className={`w-2 h-2 rounded-full ${
+              isAdmin
+                ? 'bg-amber-400 shadow-[0_0_8px_rgba(251,191,36,0.8)]'
+                : isOfficer
+                ? 'bg-purple-400 shadow-[0_0_8px_rgba(192,132,252,0.8)]'
+                : currentRole === 'buyer'
+                ? 'bg-emerald-400 shadow-[0_0_8px_rgba(52,211,153,0.8)]'
+                : 'bg-blue-400 shadow-[0_0_8px_rgba(96,165,250,0.8)]'
+            }`} />
+            <span className="text-[11px] font-medium text-slate-400">Persona</span>
+          </div>
+          <span className={`text-[10px] uppercase font-mono font-bold px-2 py-0.5 rounded border ${
+            isAdmin
+              ? 'bg-amber-950/80 text-amber-300 border-amber-800/80'
+              : isOfficer
+              ? 'bg-purple-950/80 text-purple-300 border-purple-800/80'
+              : currentRole === 'buyer'
+              ? 'bg-emerald-950/80 text-emerald-300 border-emerald-800/80'
+              : 'bg-blue-950/80 text-blue-300 border-blue-800/80'
+          }`}>
+            {currentRole}
+          </span>
         </div>
       </div>
     </aside>

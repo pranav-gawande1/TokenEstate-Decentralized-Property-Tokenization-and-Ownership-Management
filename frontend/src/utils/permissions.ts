@@ -38,62 +38,59 @@ export const getActiveRole = (walletRole?: string): string => {
 export const hasModulePermission = (module: AppModule, role: string): boolean => {
   const r = (role || '').trim().toLowerCase();
 
-  // 1. Admin: Full Access to all modules across the application
+  // 1. Admin: Full Access to ALL modules across the entire platform
   if (r === 'admin') {
     return true;
   }
 
-  // 2. Government Officer & Registrar:
-  // Strictly permitted ONLY to Verification, Audit, and Institutional Portals
+  // 2. Government Officer & Sub-Registrar:
+  // Permitted: Verification, Audit, Institutional Portals (Review Desk)
+  // Denied: Citizen Owner registration/minting, Consumer Marketplace
   if (r === 'officer' || r === 'registrar') {
-    return (
-      module === 'verification' ||
-      module === 'audit' ||
-      module === 'institutional'
-    );
+    if (module === 'owner' || module === 'buyer') {
+      return false;
+    }
+    return true;
   }
 
-  // 3. Buyer:
+  // 3. Buyer / Investor:
+  // Permitted: Marketplace, Verification (Document & QR check), General Workspace (Properties, Transfers, Deeds)
+  // Denied: Owner modules (Register Property, Tokenization), Institutional Portals, Audit Trail / Fraud Console
   if (r === 'buyer') {
-    // Strictly Denied: Verification, Audit, Institutional Portals, Owner Modules
     if (
-      module === 'verification' ||
-      module === 'audit' ||
+      module === 'owner' ||
       module === 'institutional' ||
-      module === 'owner'
+      module === 'audit'
     ) {
       return false;
     }
-    // Allowed: Buyer modules, other modules
     return true;
   }
 
-  // 4. Owner:
+  // 4. Property Owner / Citizen:
+  // Permitted: Owner modules (Register Property, Tokenization Hub), Verification (Document & QR check), General Workspace
+  // Denied: Buyer Marketplace, Institutional Portals, Audit Trail / Fraud Console
   if (r === 'owner') {
-    // Strictly Denied: Verification, Audit, Institutional Portals, Buyer Modules
     if (
-      module === 'verification' ||
-      module === 'audit' ||
+      module === 'buyer' ||
       module === 'institutional' ||
-      module === 'buyer'
+      module === 'audit'
     ) {
       return false;
     }
-    // Allowed: Owner modules, other modules
     return true;
   }
 
-  // Auditor persona
+  // 5. Auditor persona:
   if (r === 'auditor') {
-    if (module === 'audit' || module === 'verification') {
+    if (module === 'audit' || module === 'verification' || module === 'other') {
       return true;
     }
     return false;
   }
 
-  // Default fallback
+  // Fallback safe default
   if (
-    module === 'verification' ||
     module === 'audit' ||
     module === 'institutional'
   ) {
