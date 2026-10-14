@@ -83,7 +83,7 @@ export const RoleGuard: React.FC<RoleGuardProps> = ({
             </Button>
           </Link>
 
-          {currentRole === 'buyer' && (
+          {(currentRole === 'buyer' || currentRole === 'owner' || currentRole === 'audit' || currentRole === 'institutional') && (
             <Link to="/marketplace" className="w-full sm:w-auto">
               <Button
                 variant="outline"

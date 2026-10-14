@@ -22,7 +22,7 @@ export const Sidebar: React.FC<{ className?: string; onCloseMobile?: () => void 
   className = '',
   onCloseMobile,
 }) => {
-  const { user } = useAuth();
+  const { user, isAuthenticated } = useAuth();
   const { role: walletRole } = useWallet();
   const currentRole = user?.role ? user.role.toLowerCase() : getActiveRole(walletRole);
 
@@ -47,13 +47,13 @@ export const Sidebar: React.FC<{ className?: string; onCloseMobile?: () => void 
   const primaryItems = [
     { label: 'Overview', href: '/dashboard', icon: <LayoutDashboard className="w-4 h-4" /> },
     { label: propertyLedgerLabel, href: '/properties', icon: <Building2 className="w-4 h-4" /> },
-    ...(canOwner
+    ...(isAuthenticated
       ? [{ label: 'Register Property', href: '/properties/register', icon: <PlusCircle className="w-4 h-4" /> }]
       : []),
-    ...(canOwner
+    ...(isAuthenticated
       ? [{ label: 'Tokenization (Mint NFT)', href: '/tokenization', icon: <Layers className="w-4 h-4" /> }]
       : []),
-    ...(canBuyer
+    ...(isAuthenticated
       ? [{ label: 'Marketplace', href: '/marketplace', icon: <ShoppingBag className="w-4 h-4" /> }]
       : []),
     {
